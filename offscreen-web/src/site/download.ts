@@ -74,7 +74,7 @@ export const VENDOR_GUIDES: { vendor: string; system: string; path: string; tip:
 
 /** 安装通用步骤 */
 export const INSTALL_STEPS = [
-  '点击「下载 APK」按钮，等待文件下载完成（约 8MB）',
+  '点击「下载 APK」按钮，等待文件下载完成（约 3MB）',
   '下载完成后点击通知栏中的文件；若浏览器拦截，改用文件管理器打开 Download 目录中的 apk',
   '系统弹出「未知来源应用」提示时，按上方对应机型的路径放行你的浏览器',
   '回到安装界面点击「安装」；Google Play 保护机制如弹出风险提示，选择「仍要安装」——本应用不含任何恶意行为',
