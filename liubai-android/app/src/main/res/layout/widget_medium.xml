@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 4x1 中部件：屏幕 / 专注 / 拿起次数 横排 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:padding="14dp"
+    android:background="@drawable/widget_bg"
+    android:gravity="center_vertical">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="今日屏幕" android:textSize="11sp" android:textColor="#6E675C" />
+        <TextView android:id="@+id/widget_screen" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="0 分钟" android:textSize="19sp"
+            android:textStyle="bold" android:textColor="#1B1915" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="今日专注" android:textSize="11sp" android:textColor="#6E675C" />
+        <TextView android:id="@+id/widget_focus" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="0 分钟" android:textSize="19sp"
+            android:textStyle="bold" android:textColor="#0A7A61" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="拿起次数" android:textSize="11sp" android:textColor="#6E675C" />
+        <TextView android:id="@+id/widget_pickup" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="0" android:textSize="19sp"
+            android:textStyle="bold" android:textColor="#1B1915" />
+    </LinearLayout>
+</LinearLayout>

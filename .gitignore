@@ -1,0 +1,37 @@
+# 构建产物
+dist/
+build/
+*/build/
+.gradle/
+.offline/
+
+# 依赖
+node_modules/
+
+# 本机/密钥（绝不入库）
+local.properties
+keystore.properties
+keystore/
+*.jks
+*.keystore
+*.apk
+*.aab
+
+# 例外：官网分发目录的 APK 必须入库（Cloudflare Pages 直接从仓库提供下载）
+!offscreen-web/public/downloads/*.apk
+
+# 编辑器
+.vscode/
+.idea/
+*.iml
+
+# 系统
+.DS_Store
+Thumbs.db
+preview.log
+
+# 逆向分析中间产物（82MB，结论已沉淀在 docs/）
+apk-analysis/
+
+# 本地工作记忆（不入库）
+.workbuddy/

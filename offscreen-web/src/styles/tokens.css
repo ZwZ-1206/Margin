@@ -1,0 +1,135 @@
+/* 「留白」 · Design Tokens
+   与 APK :core:designsystem 同值同源（叠翠 Teal / 暖橙 Amber / 暖纸浅色 / 墨青深色） */
+
+:root {
+  /* 品牌主色 · 叠翠 Teal */
+  --teal-50: #EAF7F2;
+  --teal-100: #D3EFE3;
+  --teal-200: #A7DFCB;
+  --teal-300: #5CC7B0;
+  --teal-400: #2FAE93;
+  --teal-500: #0F9677;
+  --teal-600: #0A7A61;
+  --teal-700: #08624E;
+  --teal-800: #064C3D;
+  --teal-900: #04382C;
+
+  /* 功能色 · 暖橙 Amber（专注） */
+  --amber-100: #FFF1DC;
+  --amber-300: #FFC978;
+  --amber-400: #F5A93F;
+  --amber-500: #E8930C;
+  --amber-600: #C2740A;
+  --amber-700: #96590B;
+
+  /* 语义色 */
+  --success: #0A7A61;
+  --danger: #D93940;
+  --info: #3E63DD;
+
+  /* 图表分类色 */
+  --cat-screen: #0A7A61;
+  --cat-focus: #E8930C;
+  --cat-info: #3E63DD;
+  --cat-social: #D6568A;
+  --cat-ent: #7C6BD9;
+
+  /* 字体 */
+  --font-sans: "PingFang SC", "HarmonyOS Sans SC", "MiSans", "Noto Sans SC", -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* 品牌手写体：用于 Margin 字标（系统字体回退，不引入外部字体请求） */
+  --font-hand: "Snell Roundhand", "Segoe Script", "Bradley Hand", "Brush Script MT",
+    "Xingkai SC", "STXingkai", "Kaiti SC", "KaiTi", "LXGW WenKai", cursive;
+
+  /* 字号（sp 概念，web 用 rem 近似：1rem = 16px） */
+  --text-display: 3rem;     /* 48px */
+  --text-title-l: 1.625rem; /* 26px */
+  --text-title-m: 1.25rem;  /* 20px */
+  --text-title-s: 1.0625rem;/* 17px */
+  --text-body-l: 1rem;      /* 16px */
+  --text-body-m: 0.9375rem; /* 15px */
+  --text-body-s: 0.8125rem; /* 13px */
+  --text-caption: 0.75rem;  /* 12px */
+
+  /* 间距（4/8 网格） */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* 圆角 */
+  --radius-xs: 6px;
+  --radius-s: 10px;
+  --radius-m: 14px;
+  --radius-l: 20px;
+  --radius-xl: 28px;
+  --radius-full: 999px;
+
+  /* 动效 */
+  --motion-micro: 120ms;
+  --motion-small: 200ms;
+  --motion-medium: 320ms;
+  --motion-large: 480ms;
+  --motion-xlarge: 720ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-decelerate: cubic-bezier(0, 0, 0, 1);
+  --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 浅色 · 暖纸系（默认） */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --window-bg: #F1EEE7;
+  --page-bg: #F8F6F1;
+  --card-bg: #FFFFFF;
+  --card-elevated: #FFFFFF;
+  --border: #E6E1D6;
+  --border-strong: #9C937F;
+  --divider: #EEE9DF;
+  --text-primary: #1B1915;
+  --text-secondary: #6E675C;
+  --text-tertiary: #98907F;
+  --primary: #0A7A61;
+  --on-primary: #FFFFFF;
+  --primary-container: #D3EFE3;
+  --on-primary-container: #08624E;
+  --accent: #E8930C;
+  --on-accent: #2A1B03;
+  --accent-container: #FFF1DC;
+  --shadow-1: 0 1px 2px rgba(27, 25, 21, 0.05), 0 2px 8px rgba(27, 25, 21, 0.04);
+  --shadow-2: 0 2px 6px rgba(27, 25, 21, 0.07), 0 8px 24px rgba(27, 25, 21, 0.08);
+  --highlight-border: transparent;
+}
+
+/* 深色 · 墨青系 */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --window-bg: #0C0E12;
+  --page-bg: #12151B;
+  --card-bg: #191D25;
+  --card-elevated: #222834;
+  --border: #2B323E;
+  --border-strong: #3A4351;
+  --divider: #232933;
+  --text-primary: #F2F4F7;
+  --text-secondary: #A7B0BE;
+  --text-tertiary: #78818F;
+  --primary: #5CC7B0;
+  --on-primary: #06231B;
+  --primary-container: #123328;
+  --on-primary-container: #5CC7B0;
+  --accent: #F5A93F;
+  --on-accent: #2A1B03;
+  --accent-container: #3A2B10;
+  --shadow-1: none;
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --highlight-border: #3A4351;
+}

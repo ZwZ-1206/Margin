@@ -1,0 +1,13 @@
+import { chromium } from 'playwright';
+const b = await chromium.launch({ proxy: { server: 'per-context' } });
+const ctx = await b.newContext({ viewport: { width: 1280, height: 900 } });
+const page = await ctx.newPage();
+const errs = [];
+page.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
+page.on('pageerror', (e) => errs.push('PAGEERROR: ' + e.message));
+await page.goto('http://localhost:4173/#/', { waitUntil: 'load' });
+await page.waitForTimeout(1500);
+console.log('TITLE:', await page.title());
+console.log('BODY LEN:', (await page.innerText('body')).length);
+console.log('ERRORS:', JSON.stringify(errs.slice(0, 5), null, 1));
+await b.close();

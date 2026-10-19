@@ -1,0 +1,19 @@
+# Cloudflare Pages 响应头配置
+# APK 必须声明正确的 MIME，否则部分浏览器会当成未知二进制处理
+/downloads/*.apk
+  Content-Type: application/vnd.android.package-archive
+  Content-Disposition: attachment
+  Cache-Control: public, max-age=31536000, immutable
+
+/downloads/version.json
+  Content-Type: application/json; charset=utf-8
+  Cache-Control: no-cache
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: geolocation=(), microphone=(), camera=()

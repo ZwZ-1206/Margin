@@ -1,0 +1,28 @@
+{
+  "version": "1.1.0",
+  "versionCode": 2,
+  "sizeMB": 3,
+  "minAndroid": "Android 9.0",
+  "targetAndroid": "Android 16",
+  "releaseDate": "2026-10-20",
+  "notes": "v1.1.0：新增桌面小部件、应用每日限额、挑战体系（连续使用/拿起次数/就寝）、应用内帮助与专注分享卡片。完全免费，无会员，无广告。",
+  "apk": {
+    "url": "downloads/margin-1.1.0.apk",
+    "sha256": "9a9a7acd5a094e244576cc56cc1ab327d202d561c8acd04c99ef12f1c05ff94e",
+    "sizeBytes": 2898795
+  },
+  "mirrors": [
+    {
+      "name": "GitHub Releases",
+      "url": "https://github.com/ZwZ-1206/Margin/releases/latest",
+      "note": "GitHub 备用下载"
+    },
+    {
+      "name": "网盘备用",
+      "url": "",
+      "note": "国内线路备用"
+    }
+  ],
+  "certSha256": "d62427bc1f7bbe6106315a48c3264d521dc390ce6259516cc01ed6e8e7664cf4",
+  "virusScan": ""
+}

@@ -1,0 +1,128 @@
+package com.liubai.app
+
+import android.content.Intent
+import android.os.Bundle
+import android.provider.Settings
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.liubai.core.designsystem.theme.LiubaiTheme
+import com.liubai.data.di.ServiceLocator
+import com.liubai.domain.model.ThemeMode
+import com.liubai.app.widget.MarginWidgetProvider
+import com.liubai.feature.focus.FocusScreen
+import com.liubai.feature.home.HomeScreen
+import com.liubai.feature.settings.HelpScreen
+import com.liubai.feature.settings.LimitsScreen
+import com.liubai.feature.settings.SettingsScreen
+import com.liubai.feature.stats.StatsScreen
+
+class MainActivity : ComponentActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            val settings by ServiceLocator.settingsRepository.settings
+                .collectAsStateWithLifecycle(initialValue = null)
+            val dark = when (settings?.theme ?: ThemeMode.SYSTEM) {
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+                ThemeMode.SYSTEM -> androidx.compose.foundation.isSystemInDarkTheme()
+            }
+            // 每次进入 App 顺带刷新桌面小部件（系统定时之外的数据新鲜度保障）
+            MarginWidgetProvider.updateAll(this)
+
+            LiubaiTheme(darkTheme = dark) {
+                AppRoot(
+                    dark = dark,
+                    onGrantUsagePermission = {
+                        startActivity(
+                            Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    },
+                )
+            }
+        }
+    }
+}
+
+private data class Tab(val route: String, val label: String, val icon: @Composable () -> Unit)
+
+@Composable
+private fun AppRoot(dark: Boolean, onGrantUsagePermission: () -> Unit) {
+    val navController = rememberNavController()
+    val backStack by navController.currentBackStackEntryAsState()
+    val current = backStack?.destination?.route
+
+    val tabs = listOf(
+        Tab("home", "首页") { Icon(Icons.Filled.Home, contentDescription = null) },
+        Tab("focus", "专注") { Icon(IconMarginRing, contentDescription = null) },
+        Tab("stats", "统计") { Icon(Icons.Filled.DateRange, contentDescription = null) },
+        Tab("settings", "设置") { Icon(Icons.Filled.Settings, contentDescription = null) },
+    )
+
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                tabs.forEach { tab ->
+                    NavigationBarItem(
+                        selected = current == tab.route,
+                        onClick = {
+                            navController.navigate(tab.route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = tab.icon,
+                        label = { Text(tab.label) },
+                    )
+                }
+            }
+        }
+    ) { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = "home",
+            modifier = Modifier.padding(padding),
+        ) {
+            composable("home") {
+                HomeScreen(
+                    onStartFocus = { navController.navigate("focus") },
+                    onOpenStats = { navController.navigate("stats") },
+                    onGrantPermission = onGrantUsagePermission,
+                )
+            }
+            composable("focus") { FocusScreen() }
+            composable("stats") { StatsScreen() }
+            composable("settings") {
+                SettingsScreen(
+                    onOpenLimits = { navController.navigate("limits") },
+                    onOpenHelp = { navController.navigate("help") },
+                )
+            }
+            composable("limits") { LimitsScreen() }
+            composable("help") { HelpScreen() }
+        }
+    }
+}
