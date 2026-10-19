@@ -93,7 +93,26 @@ sdk.dir=C:/Apps/Android-SDK
 
 产物路径：`app/build/outputs/apk/{debug,release}/app-*.apk`
 
-### 签名配置
+### 签名配置（重要：国产 ROM 兼容）
+
+Release 产物需要 **v1 + v2 双签名**。仅 v2/v3 签名在 ColorOS / MIUI 等机型上
+从浏览器或文件管理器安装时会报「安装包已损坏」；且 AGP 的 `enableV1Signing`
+在部分版本不生效，因此构建后必须执行一次脚本：
+
+```bash
+./gradlew :app:assembleRelease
+./sign-release.sh        # zipalign + apksigner 重签为 v1 + v2
+```
+
+校验：
+
+```bash
+"$ANDROID_HOME/build-tools/37.0.0/apksigner.bat" verify --min-sdk-version 21 -v \
+  app/build/outputs/apk/release/app-release.apk
+# 应输出 v1 scheme: true、v2 scheme: true
+```
+
+### 密钥配置
 
 Release 构建从项目根目录的 `keystore.properties` 读取签名信息（**该文件不入库**）。创建你自己的密钥：
 

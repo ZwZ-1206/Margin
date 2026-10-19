@@ -1,15 +1,15 @@
 {
-  "version": "1.2.0",
-  "versionCode": 3,
+  "version": "1.2.1",
+  "versionCode": 4,
   "sizeMB": 3,
   "minAndroid": "Android 9.0",
   "targetAndroid": "Android 16",
   "releaseDate": "2026-10-20",
-  "notes": "v1.2.0：检查周期由 30 分钟降到 15 分钟（系统下限）、新增「精确监控」模式（每分钟检查 + 亮屏解锁即时检查），小部件改为主动刷新不再受 30 分钟下限约束。完全免费，无会员，无广告。",
+  "notes": "v1.2.1：修复部分机型（OPPO/ColorOS 等）安装时提示「安装包已损坏」的问题——现同时启用 v1 + v2 签名。完全免费，无会员，无广告。",
   "apk": {
-    "url": "downloads/margin-1.2.0.apk",
-    "sha256": "3675bb2aeb208936461d83d3cea9efdde4d63ce8c560f4784c68571390b11773",
-    "sizeBytes": 2898923
+    "url": "downloads/margin-1.2.1.apk",
+    "sha256": "2b2c83fbb466d9a3aa6fd77c3c72b4eb769644fc9b6543dbc7b9537f0262a6e1",
+    "sizeBytes": 2906306
   },
   "mirrors": [
     {

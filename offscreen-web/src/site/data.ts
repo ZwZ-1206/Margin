@@ -46,6 +46,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.2.1',
+    date: '2026-10-20',
+    status: 'released',
+    items: [
+      '<b>修复安装失败</b>：部分机型（OPPO / ColorOS 等）安装时提示「安装包已损坏」，原因是仅启用了 v2 签名；现同时启用 v1 + v2 双签名',
+      '<b>安装方式</b>：下载后从「文件管理 → Download」点击安装，或在浏览器下载完成后直接点通知栏文件',
+    ],
+  },
+  {
     version: 'v1.2.0',
     date: '2026-10-20',
     status: 'released',

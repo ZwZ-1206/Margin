@@ -14,8 +14,8 @@ android {
         applicationId = "com.liubai.app"
         minSdk = 28
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.2.0"
+        versionCode = 4
+        versionName = "1.2.1"
         androidResources.localeFilters += listOf("zh", "en")
     }
 
@@ -32,6 +32,10 @@ android {
                 storePassword = props.getProperty("storePassword")
                 keyAlias = props.getProperty("keyAlias")
                 keyPassword = props.getProperty("keyPassword")
+                // 同时启用 v1 + v2 签名：国产 ROM（ColorOS/MIUI 等）从浏览器或
+                // 文件管理器安装时，仅 v2 签名会被判定为「安装包已损坏」
+                enableV1Signing = true
+                enableV2Signing = true
             }
         }
     }
