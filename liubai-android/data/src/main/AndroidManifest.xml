@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- 精确监控模式的前台服务（默认关闭，由用户在设置页开启） -->
+        <service
+            android:name="com.liubai.data.work.MonitorService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="screen_monitor" />
+        </service>
+    </application>
+</manifest>

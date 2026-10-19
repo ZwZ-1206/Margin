@@ -58,6 +58,15 @@
             android:name="com.liubai.data.focus.FocusAlarmReceiver"
             android:exported="false" />
 
+        <!-- 小部件主动刷新（绕过系统 30 分钟下限） -->
+        <receiver
+            android:name=".widget.WidgetRefreshReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.liubai.action.WIDGET_REFRESH" />
+            </intent-filter>
+        </receiver>
+
         <!-- 桌面小部件 -->
         <receiver
             android:name=".widget.MarginWidgetProvider"

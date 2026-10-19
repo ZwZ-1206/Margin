@@ -16,6 +16,7 @@ class UsageCollectWorker(context: Context, params: WorkerParameters) :
         return runCatching {
             ServiceLocator.usageRepository.collectNow()
             InterventionChecker.check(applicationContext)
+            WidgetBroadcaster.refresh(applicationContext)
             Result.success()
         }.getOrElse { Result.retry() }
     }

@@ -97,6 +97,8 @@ data class AppSettings(
     val pomodoro: PomodoroConfig = PomodoroConfig(),
     val countdownMin: Int = 30,
     val monitorEnabled: Boolean = true,
+    /** 精确监控：常驻通知 + 每分钟检查（更及时，更费电） */
+    val preciseMonitor: Boolean = false,
     val whiteNoise: String? = null,
     val whiteNoiseVolume: Int = 60,
     /** 赞助收款码图片路径（filesDir 内相对路径，null = 未上传） */

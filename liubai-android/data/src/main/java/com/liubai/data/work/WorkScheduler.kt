@@ -13,8 +13,9 @@ import java.util.concurrent.TimeUnit
 object WorkScheduler {
 
     fun scheduleUsageCollect(context: Context) {
+        // 15 分钟是 WorkManager 周期任务的系统下限
         val request = PeriodicWorkRequestBuilder<UsageCollectWorker>(
-            30, TimeUnit.MINUTES,
+            15, TimeUnit.MINUTES,
         ).setConstraints(
             Constraints.Builder()
                 .setRequiresBatteryNotLow(true)

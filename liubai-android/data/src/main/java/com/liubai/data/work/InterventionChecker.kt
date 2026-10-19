@@ -9,14 +9,14 @@ import com.liubai.core.common.DurationFormat
 import com.liubai.data.di.ServiceLocator
 import com.liubai.data.usage.AppLabelResolver
 import com.liubai.data.usage.UsageStatsReader
-import com.liubai.domain.model.AppLimit
 import com.liubai.domain.model.ChallengeConfig
-import com.liubai.domain.model.EventType
 
 /**
  * 干预检查：单应用限额 + 挑战（连续使用 / 拿起次数）。
- * 由 UsageCollectWorker 在每次采集后调用；精确到分钟级，
- * 受系统 UsageStats 事件延迟与厂商节流影响，UI 上需说明这是估算。
+ *
+ * 触发路径有两条：
+ *  1. UsageCollectWorker 采集后（周期兜底，15 分钟级）
+ *  2. 系统应用计时器回调 notifyLimitReached（分钟级，零轮询）
  */
 object InterventionChecker {
 
@@ -54,7 +54,7 @@ object InterventionChecker {
             val name = resolver.label(limit.packageName)
             when {
                 used >= limit.limitMs -> {
-                    if (notified.mark(limit.packageName, "over")) {
+                    if (notified.mark(limit.packageName + ":over", date)) {
                         notify(
                             context,
                             id = limit.packageName.hashCode(),
@@ -64,7 +64,7 @@ object InterventionChecker {
                     }
                 }
                 used >= limit.limitMs - WARN_LEAD_MS -> {
-                    if (notified.mark(limit.packageName, "warn")) {
+                    if (notified.mark(limit.packageName + ":warn", date)) {
                         notify(
                             context,
                             id = limit.packageName.hashCode(),

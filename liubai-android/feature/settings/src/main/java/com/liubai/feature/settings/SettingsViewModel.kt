@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.liubai.data.di.ServiceLocator
 import com.liubai.data.repository.BackupManager
+import com.liubai.data.work.MonitorService
 import com.liubai.data.work.WorkScheduler
 import com.liubai.domain.model.AppSettings
 import com.liubai.domain.model.ChallengeConfig
@@ -117,6 +118,18 @@ class SettingsViewModel : ViewModel() {
             val next = transform(uiState.value.settings.challenge)
             settingsRepo.update { it.copy(challenge = next) }
             WorkScheduler.scheduleBedtime(context, next.bedtimeEnabled, next.bedtimeHour, next.bedtimeMinute)
+        }
+    }
+
+    /** 精确监控：常驻前台服务每分钟检查一次，代价是常驻通知与额外耗电 */
+    fun setPreciseMonitor(context: Context, enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepo.update { it.copy(preciseMonitor = enabled, monitorEnabled = true) }
+            runCatching {
+                val intent = MonitorService.intent(context, enabled)
+                if (enabled) context.startForegroundService(intent)
+                else context.startService(intent)
+            }
         }
     }
 

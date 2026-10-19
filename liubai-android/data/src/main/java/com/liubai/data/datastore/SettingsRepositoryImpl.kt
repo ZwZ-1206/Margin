@@ -30,6 +30,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         val AUTO_BREAK = booleanPreferencesKey("auto_start_break")
         val AUTO_NEXT = booleanPreferencesKey("auto_start_next_focus")
         val MONITOR = booleanPreferencesKey("monitor_enabled")
+        val PRECISE = booleanPreferencesKey("precise_monitor")
         val NOISE = stringPreferencesKey("white_noise")
         val VOLUME = intPreferencesKey("white_noise_volume")
         val SPONSOR_QR = stringPreferencesKey("sponsor_qr_path")
@@ -57,6 +58,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             ),
             countdownMin = p[Keys.COUNTDOWN_MIN] ?: 30,
             monitorEnabled = p[Keys.MONITOR] ?: true,
+            preciseMonitor = p[Keys.PRECISE] ?: false,
             whiteNoise = p[Keys.NOISE],
             whiteNoiseVolume = p[Keys.VOLUME] ?: 60,
             sponsorQrPath = p[Keys.SPONSOR_QR],
@@ -87,6 +89,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             p[Keys.AUTO_BREAK] = next.pomodoro.autoStartBreak
             p[Keys.AUTO_NEXT] = next.pomodoro.autoStartNextFocus
             p[Keys.MONITOR] = next.monitorEnabled
+            p[Keys.PRECISE] = next.preciseMonitor
             next.whiteNoise?.let { p[Keys.NOISE] = it } ?: p.remove(Keys.NOISE)
             p[Keys.VOLUME] = next.whiteNoiseVolume
             next.sponsorQrPath?.let { p[Keys.SPONSOR_QR] = it } ?: p.remove(Keys.SPONSOR_QR)

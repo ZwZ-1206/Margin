@@ -46,6 +46,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.2.0',
+    date: '2026-10-20',
+    status: 'released',
+    items: [
+      '<b>检查更及时</b>：采集与干预检查周期由 30 分钟降到 15 分钟（安卓后台任务的系统下限）',
+      '<b>精确监控模式</b>（设置页开关，默认关）：常驻通知 + 每 60 秒检查一次，亮屏 / 解锁瞬间立即检查',
+      '<b>小部件主动刷新</b>：不再依赖系统 30 分钟下限，每次采集、专注状态变化、开机都会立即刷新',
+      '<b>说明</b>：更及时意味着更费电，所以精确模式默认关闭，由你决定',
+    ],
+  },
+  {
     version: 'v1.1.0',
     date: '2026-10-20',
     status: 'released',

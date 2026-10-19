@@ -159,6 +159,17 @@ fun SettingsScreen(
                 )
                 Spacer(Modifier.height(8.dp))
                 SwitchRow("启用屏幕使用监控", state.settings.monitorEnabled, vm::setMonitor)
+                SwitchRow(
+                    "精确监控（更及时）",
+                    state.settings.preciseMonitor,
+                ) { on -> vm.setPreciseMonitor(context, on) }
+                if (state.settings.preciseMonitor) {
+                    Text(
+                        "已开启：常驻一条通知，每 60 秒检查一次限额与挑战，亮屏/解锁瞬间立即检查。比默认的 15 分钟周期更及时，代价是常驻通知与更多耗电。",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = extras.textTertiary,
+                    )
+                }
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(
                     onClick = {
@@ -282,7 +293,7 @@ fun SettingsScreen(
             SectionCard {
                 Text("关于", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(8.dp))
-                InfoRow("版本", "1.1.0")
+                InfoRow("版本", "1.2.0")
                 InfoRow("名称", "Margin「留白」")
                 InfoRow("官方网站", "margin.liubai.app")
                 InfoRow("开源许可", "MIT License")
