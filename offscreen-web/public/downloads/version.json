@@ -1,14 +1,14 @@
 {
-  "version": "1.2.6",
-  "versionCode": 9,
+  "version": "1.2.7",
+  "versionCode": 10,
   "sizeMB": 3,
   "minAndroid": "Android 9.0",
   "targetAndroid": "Android 16",
   "releaseDate": "2026-10-20",
-  "notes": "v1.2.6：启用全新应用图标「M.」——奶油纸底、衬线字母与一道留白曲线；支持 Android 13+ 主题图标。",
+  "notes": "v1.2.7：完善「M.」图标——自适应层改为纯奶油底 + 字母，形状完全交给启动器遮罩；官网 favicon 与 PWA 图标同步替换。",
   "apk": {
-    "url": "downloads/margin-1.2.6.apk",
-    "sha256": "cd70b8634c22120010681e81fb0dad7de904fa7c4315662b04f7d904d5463e41",
+    "url": "downloads/margin-1.2.7.apk",
+    "sha256": "032be974b58a392db3377e346b538c24006a19bbd72b0f2f81b5cec2874a58b2",
     "sizeBytes": 3111845
   },
   "mirrors": [

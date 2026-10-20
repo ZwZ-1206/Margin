@@ -46,6 +46,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.2.7',
+    date: '2026-10-20',
+    status: 'released',
+    items: [
+      '<b>图标完善</b>：自适应层改为纯奶油底 + 字母，形状完全交给启动器遮罩，任意形状下都不会出现内嵌边框',
+      '<b>官网</b>：favicon、Apple 触屏图标、PWA 图标（含 maskable）全部换成「M.」',
+    ],
+  },
+  {
     version: 'v1.2.6',
     date: '2026-10-20',
     status: 'released',
