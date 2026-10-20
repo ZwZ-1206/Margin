@@ -46,6 +46,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.2.6',
+    date: '2026-10-20',
+    status: 'released',
+    items: [
+      '<b>新图标</b>：奶油纸底 + 衬线「M.」+ 一道留白曲线，自适应图标（圆形/方形/主题单色均可）',
+      '<b>兼容</b>：同时提供 5 档 PNG 回退，老启动器也能正常显示',
+    ],
+  },
+  {
     version: 'v1.2.5',
     date: '2026-10-20',
     status: 'released',

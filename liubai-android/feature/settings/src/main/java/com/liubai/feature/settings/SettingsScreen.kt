@@ -338,7 +338,7 @@ fun SettingsScreen(
                         modifier = Modifier.weight(1f),
                     )
                     Text(
-                        "1.2.5",
+                        "1.2.6",
                         style = MaterialTheme.typography.bodySmall,
                         color = extras.textSecondary,
                     )
