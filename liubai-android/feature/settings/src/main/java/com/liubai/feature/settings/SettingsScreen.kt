@@ -59,13 +59,13 @@ import java.io.File
 fun SettingsScreen(
     onOpenLimits: () -> Unit,
     onOpenHelp: () -> Unit,
+    onCheckUpdate: () -> Unit,
     modifier: Modifier = Modifier,
     vm: SettingsViewModel = viewModel(),
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     val extras = LocalExtraColors.current
     val context = LocalContext.current
-    var showSponsorDialog by remember { mutableStateOf(false) }
     var showPermDialog by remember { mutableStateOf(false) }
     // 权限状态不是响应式的：从系统设置返回时重新检查一次
     var usageGranted by remember { mutableStateOf(UsageAccess.isGranted(context)) }
@@ -74,9 +74,6 @@ fun SettingsScreen(
     }
     var toast by remember { mutableStateOf<String?>(null) }
 
-    val pickQr = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-        uri?.let { vm.uploadSponsorQr(context, it) { ok -> toast = if (ok) "收款码已保存" else "图片读取失败" } }
-    }
     val createBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
         uri?.let { target ->
             vm.exportBackup { json ->
@@ -292,27 +289,35 @@ fun SettingsScreen(
                     color = extras.textSecondary,
                 )
                 Spacer(Modifier.height(12.dp))
-                if (state.sponsorQrExists) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            Modifier.size(64.dp).clip(RoundedCornerShape(8.dp))
-                                .background(extras.window)
-                        ) {
-                            LocalImage(
-                                file = File(context.filesDir, "sponsor_qr.png"),
-                                contentDescription = "收款码",
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
-                        Spacer(Modifier.width(12.dp))
-                        Column {
-                            Text("收款码已保存", style = MaterialTheme.typography.bodyMedium)
-                            TextButton(onClick = { showSponsorDialog = true }) { Text("更换") }
-                            TextButton(onClick = { vm.removeSponsorQr(context) }) { Text("移除") }
-                        }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        Modifier
+                            .size(180.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(extras.window),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        AssetImage(
+                            context = context,
+                            assetName = "sponsor_qr.jpg",
+                            contentDescription = "微信收款码",
+                            modifier = Modifier.fillMaxSize(),
+                        )
                     }
-                } else {
-                    Button(onClick = { pickQr.launch(arrayOf("image/*")) }) { Text("上传我的收款码") }
+                    Spacer(Modifier.width(14.dp))
+                    Column {
+                        Text(
+                            "微信扫码 · 自愿赞助",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = extras.textPrimary,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "金额随意，一元也是心意。\n不会解锁任何功能——所有功能本来就免费。",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = extras.textTertiary,
+                        )
+                    }
                 }
             }
         }
@@ -322,7 +327,24 @@ fun SettingsScreen(
             SectionCard {
                 Text("关于", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(8.dp))
-                InfoRow("版本", "1.2.4")
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "版本",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = extras.textTertiary,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        "1.2.5",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = extras.textSecondary,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    TextButton(onClick = onCheckUpdate) { Text("检查更新") }
+                }
                 InfoRow("名称", "Margin「留白」")
                 InfoRow("官方网站", "margin.liubai.app")
                 InfoRow("开源许可", "MIT License")
@@ -341,21 +363,6 @@ fun SettingsScreen(
         }
 
         item { Spacer(Modifier.height(24.dp)) }
-    }
-
-    if (showSponsorDialog) {
-        AlertDialog(
-            onDismissRequest = { showSponsorDialog = false },
-            title = { Text("更换收款码") },
-            text = { Text("选择一张新的收款码图片，将替换当前保存的图片。") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showSponsorDialog = false
-                    pickQr.launch(arrayOf("image/*"))
-                }) { Text("选择图片") }
-            },
-            dismissButton = { TextButton(onClick = { showSponsorDialog = false }) { Text("取消") } },
-        )
     }
 
     if (showPermDialog) {
@@ -386,11 +393,18 @@ fun SettingsScreen(
 }
 
 /** 本地文件图片（避免为单张图片引入 Coil） */
+/** 从 assets 读取打包进 App 的图片（赞助收款码） */
 @Composable
-private fun LocalImage(file: File, contentDescription: String?, modifier: Modifier = Modifier) {
-    val bmp = remember(file) {
+private fun AssetImage(
+    context: android.content.Context,
+    assetName: String,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+) {
+    val bmp = remember(assetName) {
         runCatching {
-            android.graphics.BitmapFactory.decodeFile(file.absolutePath)?.asImageBitmap()
+            context.assets.open(assetName).use { android.graphics.BitmapFactory.decodeStream(it) }
+                ?.asImageBitmap()
         }.getOrNull()
     }
     if (bmp != null) {

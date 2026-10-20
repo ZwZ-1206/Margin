@@ -37,7 +37,24 @@ import androidx.navigation.compose.rememberNavController
 import com.liubai.core.designsystem.theme.LiubaiTheme
 import com.liubai.data.di.ServiceLocator
 import com.liubai.domain.model.ThemeMode
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import com.liubai.app.update.ApkInstaller
 import com.liubai.app.widget.MarginWidgetProvider
+import com.liubai.data.update.UpdateChecker
+import kotlinx.coroutines.launch
 import com.liubai.feature.focus.FocusScreen
 import com.liubai.feature.home.HomeScreen
 import com.liubai.feature.settings.HelpScreen
@@ -98,6 +115,25 @@ private data class Tab(val route: String, val label: String, val icon: @Composab
 
 @Composable
 private fun AppRoot(dark: Boolean, onGrantUsagePermission: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var release by remember { mutableStateOf<UpdateChecker.Release?>(null) }
+    var progress by remember { mutableStateOf<Int?>(null) }
+    var message by remember { mutableStateOf<String?>(null) }
+
+    // 每次启动检查一次；失败静默，不打扰
+    LaunchedEffect(Unit) {
+        release = runCatching { UpdateChecker.hasUpdate(BuildConfig.VERSION_CODE) }.getOrNull()
+    }
+
+    fun checkManually() {
+        scope.launch {
+            val found = runCatching { UpdateChecker.hasUpdate(BuildConfig.VERSION_CODE) }.getOrNull()
+            if (found == null) message = "已是最新版本 v${BuildConfig.VERSION_NAME}"
+            else release = found
+        }
+    }
+
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val current = backStack?.destination?.route
@@ -108,6 +144,64 @@ private fun AppRoot(dark: Boolean, onGrantUsagePermission: () -> Unit) {
         Tab("stats", "统计") { Icon(Icons.Filled.DateRange, contentDescription = null) },
         Tab("settings", "设置") { Icon(Icons.Filled.Settings, contentDescription = null) },
     )
+
+    release?.let { r ->
+        AlertDialog(
+            onDismissRequest = { if (progress == null) release = null },
+            title = { Text("发现新版本 v${r.versionName}") },
+            text = {
+                Column {
+                    Text(
+                        r.notes.ifBlank { "修复问题并改进体验。" },
+                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                    )
+                    if (progress != null) {
+                        Spacer(Modifier.height(16.dp))
+                        LinearProgressIndicator(
+                            progress = { (progress ?: 0) / 100f },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text("正在下载 ${progress ?: 0}%")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = progress == null,
+                    onClick = {
+                        scope.launch {
+                            progress = 0
+                            val file = ApkInstaller.download(
+                                context,
+                                r.downloadUrl,
+                                "margin-${r.versionName}.apk",
+                            ) { p -> progress = p.coerceAtLeast(0) }
+                            progress = null
+                            if (file != null) {
+                                val ok = runCatching { ApkInstaller.install(context, file) }.getOrDefault(false)
+                                if (!ok) message = "请先允许「安装未知应用」，然后重新点击更新"
+                            } else {
+                                message = "下载失败，请检查网络后重试"
+                            }
+                            release = null
+                        }
+                    },
+                ) { Text(if (progress != null) "下载中…" else "立即更新") }
+            },
+            dismissButton = {
+                TextButton(onClick = { release = null }, enabled = progress == null) { Text("稍后") }
+            },
+        )
+    }
+
+    message?.let { msg ->
+        AlertDialog(
+            onDismissRequest = { message = null },
+            title = { Text(msg) },
+            confirmButton = { TextButton(onClick = { message = null }) { Text("好") } },
+        )
+    }
 
     Scaffold(
         bottomBar = {
@@ -147,6 +241,7 @@ private fun AppRoot(dark: Boolean, onGrantUsagePermission: () -> Unit) {
                 SettingsScreen(
                     onOpenLimits = { navController.navigate("limits") },
                     onOpenHelp = { navController.navigate("help") },
+                    onCheckUpdate = { checkManually() },
                 )
             }
             composable("limits") { LimitsScreen() }

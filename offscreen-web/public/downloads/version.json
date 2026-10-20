@@ -1,15 +1,15 @@
 {
-  "version": "1.2.4",
-  "versionCode": 7,
+  "version": "1.2.5",
+  "versionCode": 8,
   "sizeMB": 3,
   "minAndroid": "Android 9.0",
   "targetAndroid": "Android 16",
   "releaseDate": "2026-10-20",
-  "notes": "v1.2.4：首次启动自动引导授权；之后每次点击权限入口都会先说明用途；设置页新增「使用情况访问权限」入口与状态。完全免费，无会员，无广告。",
+  "notes": "v1.2.5：修复专注页模式切换与标签无法交互；白噪音支持导入自己的音频并可命名；音量调节常驻；修复返回首页卡顿；新增启动检查更新（应用内直接下载安装）与设置页检查入口；赞助改为内置收款码。",
   "apk": {
-    "url": "downloads/margin-1.2.4.apk",
-    "sha256": "c170f8d5290e4217d552e8771ad2f848a1e00b3d6d81da77b1aa050bb982c488",
-    "sizeBytes": 2922690
+    "url": "downloads/margin-1.2.5.apk",
+    "sha256": "3ce7beb8bac2825deadc142831c9c3619e1c05abed7179510efec8bc584f9e6c",
+    "sizeBytes": 3017021
   },
   "mirrors": [
     {

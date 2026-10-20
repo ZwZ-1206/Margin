@@ -53,6 +53,9 @@ fun HomeScreen(
     val state by vm.uiState.collectAsStateWithLifecycle()
     val extras = LocalExtraColors.current
     val context = androidx.compose.ui.platform.LocalContext.current
+    // 复用 resolver：原来在列表循环里 new，每次重组都重新查 PackageManager，导致回首页卡顿
+    val resolver = remember(context) { AppLabelResolver(context) }
+    val iconCache = remember { mutableMapOf<String, androidx.compose.ui.graphics.ImageBitmap?>() }
     var showPermissionDialog by remember { mutableStateOf(false) }
 
     // 只在「首次安装后的第一次启动」自动弹一次；之后仅当用户点击权限入口时才弹
@@ -192,7 +195,6 @@ fun HomeScreen(
                     Spacer(Modifier.height(8.dp))
                     val max = state.topApps.maxOf { it.totalMs }.coerceAtLeast(1)
                     state.topApps.forEach { app ->
-                        val resolver = AppLabelResolver(LocalContext.current)
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -204,14 +206,15 @@ fun HomeScreen(
                                     .background(extras.window),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                resolver.icon(app.packageName)?.let { d ->
-                                    d.toBitmapOrNull()?.let { bmp ->
-                                        androidx.compose.foundation.Image(
-                                            bitmap = bmp,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(28.dp),
-                                        )
-                                    }
+                                val bmp = iconCache.getOrPut(app.packageName) {
+                                    resolver.icon(app.packageName)?.toBitmapOrNull()
+                                }
+                                if (bmp != null) {
+                                    androidx.compose.foundation.Image(
+                                        bitmap = bmp,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(28.dp),
+                                    )
                                 }
                             }
                             Spacer(Modifier.width(12.dp))

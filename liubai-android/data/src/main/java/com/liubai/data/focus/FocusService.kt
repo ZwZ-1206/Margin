@@ -67,7 +67,8 @@ class FocusService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var tickJob: Job? = null
     private var state: TimerState = TimerState()
-    private val synth = WhiteNoiseSynth()
+    // 声音统一交给 SoundController（内置合成音色 + 用户导入音频）
+
 
     /** 屏幕关闭时自动暂停（可配置） */
     private val screenReceiver = object : BroadcastReceiver() {
@@ -152,15 +153,9 @@ class FocusService : Service() {
     }
 
     private fun handleNoise(intent: Intent) {
-        val name = intent.getStringExtra(EXTRA_NOISE)
+        val key = intent.getStringExtra(EXTRA_NOISE)
         val volume = intent.getIntExtra(EXTRA_VOLUME, 60) / 100f
-        if (name.isNullOrBlank()) {
-            synth.stop()
-        } else {
-            val sound = runCatching { WhiteNoiseSynth.Sound.valueOf(name) }.getOrNull() ?: return
-            synth.volume = volume.coerceIn(0f, 1f)
-            synth.start(sound)
-        }
+        SoundController.play(this, key, volume)
     }
 
     /** 进程重建：加载断点、推进引擎、恢复通知 */
@@ -230,10 +225,11 @@ class FocusService : Service() {
         scope.launch {
             val settings = ServiceLocator.settingsRepository.current()
             pomodoroConfigCache = settings.pomodoro
-            val noise = settings.whiteNoise ?: return@launch
-            val sound = runCatching { WhiteNoiseSynth.Sound.valueOf(noise) }.getOrNull() ?: return@launch
-            synth.volume = (settings.whiteNoiseVolume / 100f).coerceIn(0f, 1f)
-            synth.start(sound)
+            SoundController.play(
+                this@FocusService,
+                settings.whiteNoise,
+                (settings.whiteNoiseVolume / 100f).coerceIn(0f, 1f),
+            )
         }
     }
 
@@ -265,7 +261,7 @@ class FocusService : Service() {
         scope.launch {
             ServiceLocator.focusRepository.clearCheckpoint()
             cancelEndAlarm()
-            synth.stop()
+            SoundController.stop()
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         }
@@ -322,7 +318,7 @@ class FocusService : Service() {
 
     override fun onDestroy() {
         tickJob?.cancel()
-        synth.stop()
+        SoundController.stop()
         runCatching { unregisterReceiver(screenReceiver) }
         super.onDestroy()
     }

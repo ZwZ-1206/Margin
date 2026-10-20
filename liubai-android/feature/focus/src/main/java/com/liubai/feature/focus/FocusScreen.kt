@@ -1,5 +1,8 @@
 package com.liubai.feature.focus
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -61,6 +64,16 @@ fun FocusScreen(
     var showStopConfirm by remember { mutableStateOf(false) }
     var showTagDialog by remember { mutableStateOf(false) }
     var shareToast by remember { mutableStateOf<String?>(null) }
+    var pickingAudio by remember { mutableStateOf(false) }
+    var managingSounds by remember { mutableStateOf(false) }
+    var pendingAudio by remember { mutableStateOf<Uri?>(null) }
+
+    // 选完文件后弹「命名」对话框
+    val audioPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) pendingAudio = uri
+    }
+
+    LaunchedEffect(Unit) { vm.refreshCustomSounds(context) }
 
     // 每秒刷新一次本地时间轴（环与文字由引擎状态 + elapsedRealtime 推导）
     var nowTick by remember { mutableLongStateOf(android.os.SystemClock.elapsedRealtime()) }
@@ -208,7 +221,7 @@ fun FocusScreen(
 
                 SegmentedToggle(
                     options = listOf(FocusMode.POMODORO, FocusMode.COUNTDOWN, FocusMode.STOPWATCH),
-                    selected = state.timer.mode,
+                    selected = state.mode,
                     onSelect = vm::selectMode,
                     label = {
                         when (it) {
@@ -220,7 +233,7 @@ fun FocusScreen(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = when (state.timer.mode) {
+                    text = when (state.mode) {
                         FocusMode.POMODORO -> "${state.settings.pomodoro.focusMin} 分钟专注 + ${state.settings.pomodoro.shortBreakMin} 分钟休息，每 ${state.settings.pomodoro.cyclesBeforeLongBreak} 轮长休"
                         FocusMode.COUNTDOWN -> "设定一个时长，结束即完成"
                         FocusMode.STOPWATCH -> "不限时长，随时结束"
@@ -230,19 +243,19 @@ fun FocusScreen(
                     textAlign = TextAlign.Center,
                 )
 
-                if (state.timer.mode == FocusMode.COUNTDOWN) {
+                if (state.mode == FocusMode.COUNTDOWN) {
                     Spacer(Modifier.height(16.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf(15, 25, 30, 45, 60).forEach { min ->
+                        listOf(10, 15, 25, 30, 45, 60, 90).forEach { min ->
                             FilterChip(
                                 selected = state.countdownMin == min,
-                                onClick = { /* 改设置 */ },
-                                label = { Text("$min 分钟") },
+                                onClick = { vm.setCountdownMin(min) },
+                                label = { Text("$min 分") },
                             )
                         }
                     }
                     Text(
-                        "时长可在设置页修改（当前 ${state.countdownMin} 分钟）",
+                        "当前 ${state.countdownMin} 分钟，点上方数字可直接切换",
                         style = MaterialTheme.typography.labelSmall,
                         color = extras.textTertiary,
                     )
@@ -284,42 +297,87 @@ fun FocusScreen(
 
                 // 白噪音
                 SectionCard {
-                    Text("白噪音", style = MaterialTheme.typography.titleLarge)
-                    Spacer(Modifier.height(4.dp))
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("白噪音", style = MaterialTheme.typography.titleLarge)
+                        TextButton(onClick = { pickingAudio = true }) { Text("＋ 导入音频") }
+                    }
                     Text(
-                        "程序化实时合成，不占安装包体积",
+                        "内置音色实时合成；也可以导入自己的音频（循环播放）",
                         style = MaterialTheme.typography.labelSmall,
                         color = extras.textTertiary,
                     )
                     Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        WhiteNoiseSynth.Sound.entries.forEach { sound ->
-                            FilterChip(
-                                selected = state.settings.whiteNoise == sound.name,
-                                onClick = {
-                                    vm.setNoise(context, if (state.settings.whiteNoise == sound.name) null else sound)
-                                },
-                                label = {
-                                    Text(
-                                        when (sound) {
-                                            WhiteNoiseSynth.Sound.RAIN -> "雨声"
-                                            WhiteNoiseSynth.Sound.STREAM -> "溪流"
-                                            WhiteNoiseSynth.Sound.FOREST -> "森林"
-                                            WhiteNoiseSynth.Sound.OCEAN -> "海浪"
-                                            WhiteNoiseSynth.Sound.CAFE -> "咖啡馆"
-                                            WhiteNoiseSynth.Sound.BROWN -> "棕噪音"
-                                        }
-                                    )
-                                },
-                            )
+
+                    WhiteNoiseSynth.Sound.entries.chunked(3).forEach { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            row.forEach { sound ->
+                                val key = vm.builtinKey(sound)
+                                FilterChip(
+                                    selected = state.settings.whiteNoise == key,
+                                    onClick = {
+                                        vm.setNoise(context, if (state.settings.whiteNoise == key) null else key)
+                                    },
+                                    label = { Text(builtinLabel(sound)) },
+                                )
+                            }
                         }
+                        Spacer(Modifier.height(6.dp))
                     }
-                    if (state.settings.whiteNoise != null) {
-                        Spacer(Modifier.height(8.dp))
-                        Text("音量 ${state.settings.whiteNoiseVolume}%", style = MaterialTheme.typography.labelMedium)
+
+                    if (state.customSounds.isNotEmpty()) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "我的音频",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = extras.textSecondary,
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        state.customSounds.chunked(2).forEach { row ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                row.forEach { fileName ->
+                                    val key = com.liubai.data.focus.SoundController.keyOfFile(fileName)
+                                    FilterChip(
+                                        selected = state.settings.whiteNoise == key,
+                                        onClick = {
+                                            vm.setNoise(context, if (state.settings.whiteNoise == key) null else key)
+                                        },
+                                        label = { Text(fileName.substringBeforeLast('.')) },
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(6.dp))
+                        }
+                        TextButton(onClick = { managingSounds = true }) { Text("管理我的音频") }
+                    }
+
+                    // 音量调节常驻（不再藏在按钮后面）
+                    Spacer(Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "音量",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = extras.textSecondary,
+                        )
                         Slider(
                             value = state.settings.whiteNoiseVolume / 100f,
                             onValueChange = { vm.setVolume((it * 100).toInt()) },
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            "${state.settings.whiteNoiseVolume}%",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = extras.textTertiary,
+                        )
+                    }
+                    if (state.settings.whiteNoise == null) {
+                        Text(
+                            "选择上方任一音色即可试听，音量调节随时可用",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = extras.textTertiary,
                         )
                     }
                 }
@@ -334,6 +392,86 @@ fun FocusScreen(
                 }
                 Spacer(Modifier.height(32.dp))
             }
+        }
+    }
+
+    // 命名新导入的音频
+    pendingAudio?.let { uri ->
+        var name by remember(uri) { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { pendingAudio = null },
+            title = { Text("给这段音频起个名字") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("例如：雨夜、咖啡店") },
+                        singleLine = true,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "会复制到应用私有目录，卸载前一直可用。",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = extras.textTertiary,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val uriToImport = uri
+                    pendingAudio = null
+                    vm.importSound(context, uriToImport, name) { fileName ->
+                        shareToast = if (fileName != null) "已导入：${fileName.substringBeforeLast('.')}" else "导入失败"
+                    }
+                }) { Text("保存") }
+            },
+            dismissButton = { TextButton(onClick = { pendingAudio = null }) { Text("取消") } },
+        )
+    }
+
+    // 管理已导入的音频
+    if (managingSounds) {
+        AlertDialog(
+            onDismissRequest = { managingSounds = false },
+            title = { Text("我的音频") },
+            text = {
+                Column {
+                    if (state.customSounds.isEmpty()) {
+                        Text("还没有导入音频")
+                    } else {
+                        state.customSounds.forEach { fileName ->
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    fileName.substringBeforeLast('.'),
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                                TextButton(onClick = { vm.deleteSound(context, fileName) }) {
+                                    Text("删除")
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    managingSounds = false
+                    pickingAudio = true
+                }) { Text("导入新的") }
+            },
+            dismissButton = { TextButton(onClick = { managingSounds = false }) { Text("关闭") } },
+        )
+    }
+
+    if (pickingAudio) {
+        LaunchedEffect(Unit) {
+            pickingAudio = false
+            audioPicker.launch(arrayOf("audio/*"))
         }
     }
 
@@ -397,6 +535,15 @@ fun FocusScreen(
             dismissButton = { TextButton(onClick = { showTagDialog = false }) { Text("取消") } },
         )
     }
+}
+
+private fun builtinLabel(sound: WhiteNoiseSynth.Sound): String = when (sound) {
+    WhiteNoiseSynth.Sound.RAIN -> "雨声"
+    WhiteNoiseSynth.Sound.STREAM -> "溪流"
+    WhiteNoiseSynth.Sound.FOREST -> "森林"
+    WhiteNoiseSynth.Sound.OCEAN -> "海浪"
+    WhiteNoiseSynth.Sound.CAFE -> "咖啡馆"
+    WhiteNoiseSynth.Sound.BROWN -> "棕噪音"
 }
 
 @Composable

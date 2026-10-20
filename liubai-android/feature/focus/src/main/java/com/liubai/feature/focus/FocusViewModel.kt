@@ -1,20 +1,26 @@
 package com.liubai.feature.focus
 
 import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.liubai.data.di.ServiceLocator
 import com.liubai.data.focus.FocusService
+import com.liubai.data.focus.SoundController
 import com.liubai.data.focus.WhiteNoiseSynth
 import com.liubai.domain.model.AppSettings
 import com.liubai.domain.model.FocusMode
 import com.liubai.domain.model.Tag
 import com.liubai.domain.model.TimerState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 
 data class FocusUiState(
     val settings: AppSettings = AppSettings(),
@@ -22,9 +28,15 @@ data class FocusUiState(
     val selectedTagId: Long? = null,
     val timer: TimerState = TimerState(),
     val countdownMin: Int = 30,
-    val newTagName: String = "",
+    val mode: FocusMode = FocusMode.POMODORO,
+    val customSounds: List<String> = emptyList(),
 ) {
     val hasActiveSession: Boolean get() = timer.isActive
+
+    /** 当前选中的声音：设置里存的是 BUILTIN:xxx 或 FILE:xxx */
+    val noiseKey: String? get() = settings.whiteNoise
+
+    val selectedTag: Tag? get() = tags.firstOrNull { it.id == selectedTagId }
 }
 
 class FocusViewModel : ViewModel() {
@@ -32,37 +44,62 @@ class FocusViewModel : ViewModel() {
     private val focusRepo = ServiceLocator.focusRepository
     private val settingsRepo = ServiceLocator.settingsRepository
 
+    // 关键：模式与标签必须进状态流，否则 UI 点了没反应
+    private val modeFlow = MutableStateFlow(FocusMode.POMODORO)
+    private val tagFlow = MutableStateFlow<Long?>(null)
+    private val customSoundsFlow = MutableStateFlow<List<String>>(emptyList())
+
     val uiState: StateFlow<FocusUiState> = combine(
         settingsRepo.settings,
         focusRepo.observeTags(),
         focusRepo.observeCheckpoint(),
-    ) { settings, tags, timer ->
+        modeFlow,
+        tagFlow,
+        customSoundsFlow,
+    ) { values ->
+        @Suppress("UNCHECKED_CAST")
+        val settings = values[0] as AppSettings
+        @Suppress("UNCHECKED_CAST")
+        val tags = values[1] as List<Tag>
+        val timer = values[2] as TimerState?
+        val mode = values[3] as FocusMode
+        val tag = values[4] as Long?
+        @Suppress("UNCHECKED_CAST")
+        val custom = values[5] as List<String>
         FocusUiState(
             settings = settings,
             tags = tags,
-            selectedTagId = timer?.tagId,
+            selectedTagId = tag,
             timer = timer ?: TimerState(),
             countdownMin = settings.countdownMin,
+            mode = mode,
+            customSounds = custom,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), FocusUiState())
 
-    fun selectMode(mode: FocusMode) {
-        viewModelScope.launch { settingsRepo.update { it.copy(pomodoro = it.pomodoro) } }
-        // 模式仅本次生效，存本地字段
-        pendingMode = mode
-    }
-
-    private var pendingMode: FocusMode = FocusMode.POMODORO
-
-    fun selectTag(id: Long?) {
+    init {
         viewModelScope.launch {
-            // 标签选择通过 settings 之外的本地状态保存：直接改 checkpoint 前的选择存 DataStore 会污染模型，
-            // 这里用简单内存态 + 下次 start 传入
-            selectedTag = id
+            // 已有进行中的专注时，让模式跟随它
+            focusRepo.observeCheckpoint().collect { cp ->
+                if (cp != null && cp.isActive) modeFlow.value = cp.mode
+            }
         }
     }
 
-    private var selectedTag: Long? = null
+    fun selectMode(mode: FocusMode) {
+        modeFlow.value = mode
+    }
+
+    /** 再次点击同一个标签 = 取消选择 */
+    fun selectTag(id: Long?) {
+        tagFlow.value = if (tagFlow.value == id) null else id
+    }
+
+    fun setCountdownMin(minutes: Int) {
+        viewModelScope.launch {
+            settingsRepo.update { it.copy(countdownMin = minutes.coerceIn(5, 180)) }
+        }
+    }
 
     fun addTag(name: String, emoji: String) {
         viewModelScope.launch {
@@ -71,27 +108,83 @@ class FocusViewModel : ViewModel() {
     }
 
     fun deleteTag(id: Long) {
-        viewModelScope.launch { focusRepo.deleteTag(id) }
-    }
-
-    fun setNoise(context: Context, sound: WhiteNoiseSynth.Sound?) {
         viewModelScope.launch {
-            settingsRepo.update { it.copy(whiteNoise = sound?.name) }
+            if (tagFlow.value == id) tagFlow.value = null
+            focusRepo.deleteTag(id)
         }
     }
 
+    /** 选择音色：立即预览播放，并持久化 */
+    fun setNoise(context: Context, key: String?) {
+        val volume = (uiState.value.settings.whiteNoiseVolume / 100f).coerceIn(0f, 1f)
+        viewModelScope.launch {
+            settingsRepo.update { it.copy(whiteNoise = key) }
+        }
+        SoundController.play(context, key, volume)
+    }
+
     fun setVolume(volume: Int) {
-        viewModelScope.launch { settingsRepo.update { it.copy(whiteNoiseVolume = volume.coerceIn(0, 100)) } }
+        val v = volume.coerceIn(0, 100)
+        viewModelScope.launch { settingsRepo.update { it.copy(whiteNoiseVolume = v) } }
+        SoundController.applyVolume(v / 100f)
+    }
+
+    fun refreshCustomSounds(context: Context) {
+        viewModelScope.launch {
+            val files = withContext(Dispatchers.IO) {
+                SoundController.importedFiles(context).map { it.name }
+            }
+            customSoundsFlow.value = files
+        }
+    }
+
+    /** 导入音频：复制到 filesDir/sounds/<自定义名称>.<ext> */
+    fun importSound(context: Context, uri: Uri, name: String, onDone: (String?) -> Unit) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val safeName = name.trim().ifBlank { "我的音频" }.replace(Regex("[\\\\/:*?\"<>|]"), "_")
+                    val ext = context.contentResolver.getType(uri)?.let { mime ->
+                        when {
+                            mime.contains("mpeg") -> "mp3"
+                            mime.contains("mp4") || mime.contains("aac") -> "m4a"
+                            mime.contains("ogg") -> "ogg"
+                            mime.contains("wav") -> "wav"
+                            else -> "mp3"
+                        }
+                    } ?: "mp3"
+                    val file = File(SoundController.soundsDir(context), "$safeName.$ext")
+                    context.contentResolver.openInputStream(uri)?.use { input ->
+                        file.outputStream().use { out -> input.copyTo(out) }
+                    } ?: error("无法读取所选音频")
+                    file.name
+                }.getOrNull()
+            }
+            if (result != null) refreshCustomSounds(context)
+            onDone(result)
+        }
+    }
+
+    fun deleteSound(context: Context, fileName: String) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                runCatching { File(SoundController.soundsDir(context), fileName).delete() }
+            }
+            if (uiState.value.noiseKey == SoundController.keyOfFile(fileName)) {
+                settingsRepo.update { it.copy(whiteNoise = null) }
+            }
+            refreshCustomSounds(context)
+        }
     }
 
     fun start(context: Context) {
         val state = uiState.value
-        val mode = pendingMode
-        val tagId = selectedTag
         val intent = FocusService.startIntent(
             context = context,
-            mode = mode,
-            tagId = tagId,
+            mode = state.mode,
+            tagId = if (state.mode == FocusMode.STOPWATCH || state.mode == FocusMode.COUNTDOWN ||
+                state.mode == FocusMode.POMODORO
+            ) state.selectedTagId else null,
             countdownMin = state.countdownMin,
         )
         runCatching { context.startForegroundService(intent) }
@@ -110,8 +203,14 @@ class FocusViewModel : ViewModel() {
         context.startForegroundService(FocusService.actionIntent(context, FocusService.ACTION_STOP))
     }
 
-    /** 用户在主界面关闭完成态 */
     fun dismissFinished(context: Context) {
         context.startForegroundService(FocusService.actionIntent(context, FocusService.ACTION_DISMISS))
+    }
+
+    fun builtinKey(sound: WhiteNoiseSynth.Sound) = SoundController.keyOfBuiltin(sound)
+
+    override fun onCleared() {
+        SoundController.stop()
+        super.onCleared()
     }
 }

@@ -78,6 +78,7 @@ class HomeViewModel : ViewModel() {
 
     init {
         // 进入首页触发一次增量采集，保证数据新鲜
-        viewModelScope.launch { usageRepo.collectNow() }
+        // 采集涉及 UsageStats 查询与数据库写入，必须离开主线程，否则回首页会卡
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { usageRepo.collectNow() }
     }
 }
