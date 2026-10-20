@@ -55,6 +55,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.liubai.core.designsystem.component.ScreenHeader
 import com.liubai.core.designsystem.component.SectionCard
 import com.liubai.core.designsystem.theme.LocalExtraColors
 import com.liubai.data.usage.AppLabelResolver
@@ -64,6 +65,7 @@ private val DURATION_OPTIONS = listOf(15, 30, 45, 60, 90, 120)
 @Composable
 fun LimitsScreen(
     modifier: Modifier = Modifier,
+    onBack: () -> Unit = {},
     vm: LimitsViewModel = viewModel(),
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
@@ -79,12 +81,12 @@ fun LimitsScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item {
-            Spacer(Modifier.height(8.dp))
-            Text("应用限额", style = MaterialTheme.typography.displaySmall, color = extras.textPrimary)
-            Text(
-                "给某个应用设一个每日上限，快到时提醒一次，超过后再提醒一次。默认全部关闭——需要时再打开。",
-                style = MaterialTheme.typography.bodyMedium,
-                color = extras.textTertiary,
+            Spacer(Modifier.height(4.dp))
+            ScreenHeader(
+                title = "应用限额",
+                subtitle = "给某个应用设一个每日上限，快到时提醒一次，超过后再提醒一次。" +
+                    "默认全部关闭——需要时再打开。",
+                onBack = onBack,
             )
         }
 

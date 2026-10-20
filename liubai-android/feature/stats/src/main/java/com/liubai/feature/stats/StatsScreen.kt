@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.liubai.core.common.DurationFormat
+import com.liubai.core.designsystem.component.ScreenHeader
 import com.liubai.core.designsystem.component.SectionCard
 import com.liubai.core.designsystem.component.SegmentedToggle
 import com.liubai.core.designsystem.component.StatTile
@@ -43,6 +44,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun StatsScreen(
     modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null,
     vm: StatsViewModel = viewModel(),
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
@@ -54,7 +56,7 @@ fun StatsScreen(
     ) {
         item {
             Spacer(Modifier.height(8.dp))
-            Text("统计", style = MaterialTheme.typography.displaySmall, color = extras.textPrimary)
+            ScreenHeader(title = "统计", onBack = onBack)
         }
 
         item {

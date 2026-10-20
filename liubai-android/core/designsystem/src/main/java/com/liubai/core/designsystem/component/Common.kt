@@ -8,11 +8,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -126,5 +131,49 @@ fun EmptyState(
             textAlign = TextAlign.Center,
         )
         action?.invoke()
+    }
+}
+
+/**
+ * 二级页面标题栏：可选返回箭头 + 大标题 + 说明。
+ *
+ * 返回箭头用负 offset 抵消 IconButton 自带的 48dp 触控区内边距，
+ * 让图标视觉边缘与页面内容的 20dp 边距对齐。
+ */
+@Composable
+fun ScreenHeader(
+    title: String,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    onBack: (() -> Unit)? = null,
+) {
+    val extras = LocalExtraColors.current
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (onBack != null) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.offset(x = (-10).dp),
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "返回",
+                        tint = extras.textPrimary,
+                    )
+                }
+            }
+            Text(
+                title,
+                style = MaterialTheme.typography.displaySmall,
+                color = extras.textPrimary,
+            )
+        }
+        if (subtitle != null) {
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = extras.textTertiary,
+            )
+        }
     }
 }

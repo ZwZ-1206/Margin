@@ -172,17 +172,30 @@ private fun AppRoot(dark: Boolean, onGrantUsagePermission: () -> Unit) {
                     onClick = {
                         scope.launch {
                             progress = 0
-                            val file = ApkInstaller.download(
-                                context,
-                                r.downloadUrl,
-                                "margin-${r.versionName}.apk",
+                            val outcome = ApkInstaller.download(
+                                context = context,
+                                url = r.downloadUrl,
+                                fileName = "margin-${r.versionName}.apk",
+                                expectedSha256 = r.sha256,
+                                expectedSize = r.sizeBytes,
                             ) { p -> progress = p.coerceAtLeast(0) }
                             progress = null
-                            if (file != null) {
-                                val ok = runCatching { ApkInstaller.install(context, file) }.getOrDefault(false)
-                                if (!ok) message = "请先允许「安装未知应用」，然后重新点击更新"
-                            } else {
-                                message = "下载失败，请检查网络后重试"
+                            when (outcome) {
+                                is ApkInstaller.Outcome.Success -> {
+                                    val ok = runCatching { ApkInstaller.install(context, outcome.file) }
+                                        .getOrDefault(false)
+                                    if (!ok) message = "请先允许「安装未知应用」，然后重新点击更新"
+                                }
+                                is ApkInstaller.Outcome.Failure -> {
+                                    message = when (outcome.reason) {
+                                        ApkInstaller.Reason.NO_URL ->
+                                            "没有找到安装包地址，请到官网手动下载"
+                                        ApkInstaller.Reason.NETWORK ->
+                                            "下载失败，请检查网络后重试"
+                                        else ->
+                                            "安装包校验未通过（文件不完整或被替换），请到官网手动下载"
+                                    }
+                                }
                             }
                             release = null
                         }
@@ -236,7 +249,9 @@ private fun AppRoot(dark: Boolean, onGrantUsagePermission: () -> Unit) {
                 )
             }
             composable("focus") { FocusScreen() }
-            composable("stats") { StatsScreen() }
+            composable("stats") {
+                StatsScreen(onBack = { navController.popBackStack() })
+            }
             composable("settings") {
                 SettingsScreen(
                     onOpenLimits = { navController.navigate("limits") },
@@ -244,8 +259,12 @@ private fun AppRoot(dark: Boolean, onGrantUsagePermission: () -> Unit) {
                     onCheckUpdate = { checkManually() },
                 )
             }
-            composable("limits") { LimitsScreen() }
-            composable("help") { HelpScreen() }
+            composable("limits") {
+                LimitsScreen(onBack = { navController.popBackStack() })
+            }
+            composable("help") {
+                HelpScreen(onBack = { navController.popBackStack() })
+            }
         }
     }
 }

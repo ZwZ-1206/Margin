@@ -14,14 +14,17 @@ import java.net.URL
  */
 object UpdateChecker {
 
-    private const val VERSION_URL = "https://margin-8ux.pages.dev/downloads/version.json"
-    const val DOWNLOAD_PAGE = "https://margin-8ux.pages.dev/#/download"
+    private const val BASE_URL = "https://margin-8ux.pages.dev/"
+    private const val VERSION_URL = BASE_URL + "downloads/version.json"
+    const val DOWNLOAD_PAGE = BASE_URL + "#/download"
 
     data class Release(
         val versionName: String,
         val versionCode: Int,
         val notes: String,
         val downloadUrl: String,
+        val sha256: String? = null,
+        val sizeBytes: Long = 0L,
     )
 
     /** 拉取线上版本信息；任何异常返回 null */
@@ -40,12 +43,25 @@ object UpdateChecker {
                 val code = root.optInt("versionCode", 0)
                 val name = root.optString("version", "")
                 if (code <= 0) return@runCatching null
-                val apkUrl = root.optJSONObject("apk")?.optString("url").orEmpty()
+
+                val apk = root.optJSONObject("apk")
+                val rawUrl = apk?.optString("url").orEmpty()
+                // version.json 里写的是相对路径（downloads/xxx.apk），必须基于站点根解析成绝对地址。
+                // 上一版直接用 startsWith("http") 判断，相对路径会被当成"没有直链"而回退到网页地址，
+                // 于是下载器把 SPA 的 HTML 存成 .apk，安装器报「安装包已损坏」。
+                val absoluteUrl = when {
+                    rawUrl.isBlank() -> ""
+                    rawUrl.startsWith("http://") || rawUrl.startsWith("https://") -> rawUrl
+                    else -> runCatching { URL(URL(BASE_URL), rawUrl).toString() }.getOrDefault("")
+                }
+
                 Release(
                     versionName = name,
                     versionCode = code,
                     notes = root.optString("notes", ""),
-                    downloadUrl = if (apkUrl.startsWith("http")) apkUrl else DOWNLOAD_PAGE,
+                    downloadUrl = absoluteUrl,
+                    sha256 = apk?.optString("sha256")?.takeIf { it.length == 64 },
+                    sizeBytes = apk?.optLong("sizeBytes", 0L) ?: 0L,
                 )
             } finally {
                 conn.disconnect()

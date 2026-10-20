@@ -1,15 +1,15 @@
 {
-  "version": "1.2.9",
-  "versionCode": 12,
+  "version": "1.2.10",
+  "versionCode": 13,
   "sizeMB": 3,
   "minAndroid": "Android 9.0",
   "targetAndroid": "Android 16",
   "releaseDate": "2026-10-20",
-  "notes": "v1.2.9：应用限额的应用列表改为多渠道合并——没有桌面图标、被启动器隐藏、装上还没用过的应用也能读到，并正确显示中文名与图标；列表按拼音排序，搜索同时匹配应用名与包名。",
+  "notes": "v1.2.10：修复应用内更新——此前会把版本清单里的相对路径误判为「没有直链」，下载到的是网页而非 APK，安装时报「安装包已损坏」；现已正确解析地址，并在下载后校验字节数、ZIP 结构与 SHA-256。另补上应用限额、统计、帮助三个二级页面的左上角返回键。",
   "apk": {
-    "url": "downloads/margin-1.2.9.apk",
-    "sha256": "9c60f986827f9ec210de0d230247d720b0e881354399821615b045712b77a09c",
-    "sizeBytes": 3164199
+    "url": "downloads/margin-1.2.10.apk",
+    "sha256": "da24d073c669d8abf71286f6c646821c9fd75da88d50ccc5dc25f7efb914ef8c",
+    "sizeBytes": 3164194
   },
   "mirrors": [
     {

@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.liubai.core.designsystem.component.ScreenHeader
 import com.liubai.core.designsystem.component.SectionCard
 import com.liubai.core.designsystem.theme.LocalExtraColors
 
@@ -56,7 +57,10 @@ private val HELP_ITEMS = listOf(
 )
 
 @Composable
-fun HelpScreen(modifier: Modifier = Modifier) {
+fun HelpScreen(
+    modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null,
+) {
     val extras = LocalExtraColors.current
     LazyColumn(
         modifier = modifier.fillMaxSize().padding(horizontal = 20.dp),
@@ -64,11 +68,10 @@ fun HelpScreen(modifier: Modifier = Modifier) {
     ) {
         item {
             Spacer(Modifier.height(8.dp))
-            Text("帮助", style = MaterialTheme.typography.displaySmall, color = extras.textPrimary)
-            Text(
-                "留白想做的事很简单：把时间看明白，然后放下手机。",
-                style = MaterialTheme.typography.bodyMedium,
-                color = extras.textTertiary,
+            ScreenHeader(
+                title = "帮助",
+                subtitle = "留白想做的事很简单：把时间看明白，然后放下手机。",
+                onBack = onBack,
             )
         }
         items(HELP_ITEMS.size) { i ->

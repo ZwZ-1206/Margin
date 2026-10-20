@@ -46,6 +46,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.2.10',
+    date: '2026-10-20',
+    status: 'released',
+    items: [
+      '<b>修复应用内更新</b>：此前会把版本清单里的相对路径误判为「没有直链」，下载到的是网页而非 APK，安装时报「安装包已损坏」。现已正确解析地址，并在下载后校验字节数、ZIP 结构与 SHA-256',
+      '<b>返回键</b>：应用限额、统计、帮助三个二级页面左上角补上返回箭头',
+    ],
+  },
+  {
     version: 'v1.2.9',
     date: '2026-10-20',
     status: 'released',
