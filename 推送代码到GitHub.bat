@@ -7,16 +7,16 @@ echo   ==========================================
 echo     Margin「留白」 - 推送到 GitHub
 echo   ==========================================
 echo.
-echo   1) 令牌只在需要时生成一次：
+echo   令牌只在需要时生成一次：
 echo      GitHub - Settings - Developer settings - Personal access tokens
 echo        方式 A（推荐，细粒度）：Tokens (fine-grained) - Generate new token
 echo          Repository access: Only select repositories - 勾选 Margin
 echo          Permissions - Repository permissions - Contents: Read and write
 echo        方式 B（经典）：Tokens (classic) - 勾选 repo 和 workflow
 echo.
-echo   2) 复制令牌到剪贴板，然后在这里按任意键。
+echo   接下来会提示粘贴令牌：Ctrl+V 或右键粘贴，然后回车。
+echo   输入过程中不显示任何字符，这是正常的。
 echo.
-pause >nul
 
 powershell -NoProfile -ExecutionPolicy Bypass -File "tools\push-to-github.ps1"
 if errorlevel 1 goto failed

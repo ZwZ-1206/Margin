@@ -17,19 +17,28 @@ function Fail($msg) {
     exit 1
 }
 
-# ---------- 1. 取令牌 ----------
+# ---------- 1. 输入令牌 ----------
+Write-Host "  请粘贴 GitHub 令牌（粘贴后回车，输入过程不显示）" -ForegroundColor Cyan
 $token = ''
-try { $token = (Get-Clipboard -Raw) } catch { }
-if ($token) { $token = $token.Trim() -replace '\s', '' }
-
-if (-not ($token -match '^(ghp_|github_pat_)')) {
-    Write-Host "  剪贴板里没有识别到令牌。" -ForegroundColor Yellow
-    $token = (Read-Host "  请直接粘贴令牌后回车").Trim()
+while ($true) {
+    $secure = Read-Host -AsSecureString "  令牌"
+    if (-not $secure -or $secure.Length -eq 0) {
+        Write-Host "  没有输入内容，请重新粘贴。" -ForegroundColor Yellow
+        continue
+    }
+    $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
+    try {
+        $token = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
+    } finally {
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+    }
+    $token = $token.Trim() -replace '\s', ''
+    if ($token -match '^(ghp_|github_pat_)') { break }
+    Write-Host "  格式不对（应以 ghp_ 或 github_pat_ 开头），请重新粘贴。" -ForegroundColor Yellow
 }
-if (-not ($token -match '^(ghp_|github_pat_)')) { Fail "令牌格式不对（应以 ghp_ 或 github_pat_ 开头）" }
 
 $masked = $token.Substring(0, [Math]::Min(11, $token.Length)) + '...'
-Write-Host "  使用令牌: $masked" -ForegroundColor DarkGray
+Write-Host "  已接收令牌: $masked" -ForegroundColor DarkGray
 
 # ---------- 2. 待推送内容 ----------
 git fetch origin $branch 2>$null | Out-Null
