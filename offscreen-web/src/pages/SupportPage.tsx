@@ -1,6 +1,5 @@
 import { FAQS } from '../site/data';
-import { SponsorCard } from '../components/SponsorCard';
-import { IconMail, IconShield, IconDatabase } from '../components/Icons';
+import { IconMail, IconShield, IconDatabase, IconHeart } from '../components/Icons';
 
 const FEEDBACK_EMAIL = '3067326187@qq.com';
 
@@ -77,8 +76,14 @@ export function SupportPage() {
           </div>
         </div>
 
-        <div style={{ marginTop: 'var(--space-12)' }}>
-          <SponsorCard />
+        <div className="support-sponsor-cta">
+          <p>如果「留白」帮到了你，可以请我喝杯咖啡——不赞助也能用全部功能。</p>
+          <a className="btn btn-accent" href="#/sponsor" onClick={(e) => {
+            e.preventDefault();
+            window.location.hash = '#/sponsor';
+          }}>
+            <IconHeart size={18} /> 前往支持页
+          </a>
         </div>
       </div>
     </section>

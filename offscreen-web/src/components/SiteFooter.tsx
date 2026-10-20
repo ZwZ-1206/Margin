@@ -15,7 +15,8 @@ export function SiteFooter({ onNavigate }: { onNavigate: (r: Route) => void }) {
             <a href="#/" onClick={(e) => { e.preventDefault(); onNavigate('home'); }}>首页</a>
             <a href="#/download" onClick={(e) => { e.preventDefault(); onNavigate('download'); }}>下载</a>
             <a href="#/changelog" onClick={(e) => { e.preventDefault(); onNavigate('changelog'); }}>更新日志</a>
-            <a href="#/support" onClick={(e) => { e.preventDefault(); onNavigate('support'); }}>支持</a>
+            <a href="#/support" onClick={(e) => { e.preventDefault(); onNavigate('support'); }}>帮助与反馈</a>
+            <a href="#/sponsor" onClick={(e) => { e.preventDefault(); onNavigate('sponsor'); }}>支持</a>
             <a href="https://github.com/ZwZ-1206/Margin" target="_blank" rel="noopener">GitHub</a>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <IconHeart size={14} /> 自愿赞助

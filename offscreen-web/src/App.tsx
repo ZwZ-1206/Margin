@@ -6,12 +6,13 @@ import { HomePage } from './pages/HomePage';
 import { DownloadPage } from './pages/DownloadPage';
 import { ChangelogPage } from './pages/ChangelogPage';
 import { SupportPage } from './pages/SupportPage';
+import { SponsorPage } from './pages/SponsorPage';
 
-export type Route = 'home' | 'download' | 'changelog' | 'support';
+export type Route = 'home' | 'download' | 'changelog' | 'support' | 'sponsor';
 
 function routeFromHash(): Route {
   const h = window.location.hash.replace(/^#\/?/, '');
-  if (h === 'download' || h === 'changelog' || h === 'support') return h;
+  if (h === 'download' || h === 'changelog' || h === 'support' || h === 'sponsor') return h;
   return 'home';
 }
 
@@ -37,6 +38,7 @@ export default function App() {
         {route === 'download' && <DownloadPage onNavigate={setRoute} />}
         {route === 'changelog' && <ChangelogPage />}
         {route === 'support' && <SupportPage />}
+        {route === 'sponsor' && <SponsorPage />}
       </main>
       <SiteFooter onNavigate={setRoute} />
     </div>

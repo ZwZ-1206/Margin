@@ -8,7 +8,8 @@ const NAV: { key: Route; label: string }[] = [
   { key: 'home', label: '首页' },
   { key: 'download', label: '下载' },
   { key: 'changelog', label: '更新日志' },
-  { key: 'support', label: '支持' },
+  { key: 'support', label: '帮助与反馈' },
+  { key: 'sponsor', label: '支持' },
 ];
 
 const MODES: { key: ThemeMode; label: string; icon: typeof IconSun }[] = [

@@ -20,9 +20,9 @@ export function SponsorCard({ compact = false }: { compact?: boolean }) {
         </p>
       </div>
       {!compact && (
-        <a className="btn btn-accent" href="#/support" onClick={(e) => {
+        <a className="btn btn-accent" href="#/sponsor" onClick={(e) => {
           e.preventDefault();
-          window.location.hash = '#/support';
+          window.location.hash = '#/sponsor';
         }}>
           <IconHeart size={18} /> 赞助支持
         </a>

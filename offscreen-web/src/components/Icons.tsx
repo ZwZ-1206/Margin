@@ -137,6 +137,12 @@ export const IconMail = ({ size = 24 }: P) => (
   </svg>
 );
 
+export const IconGithub = ({ size = 24 }: P) => (
+  <svg {...base(size)}>
+    <path d="M9 19c-4.3 1.3-4.3-2.2-6-2.8m12 5v-3.6c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.7 4.7 0 0 0-1.3-3.2 4.4 4.4 0 0 0-.1-3.2s-1-.3-3.4 1.3a11.6 11.6 0 0 0-6 0C6.7 2.9 5.7 3.2 5.7 3.2a4.4 4.4 0 0 0-.1 3.2A4.7 4.7 0 0 0 4.3 9.6c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" />
+  </svg>
+);
+
 export const ICONS: Record<string, (p: P) => JSX.Element> = {
   timer: IconTimer,
   chart: IconChart,
@@ -149,4 +155,5 @@ export const ICONS: Record<string, (p: P) => JSX.Element> = {
   download: IconDownload,
   shield: IconShield,
   mail: IconMail,
+  github: IconGithub,
 };
