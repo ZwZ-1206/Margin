@@ -87,6 +87,21 @@ npm run build      # 构建（产物在 dist/）
 
 MIT License，见 `liubai-android/LICENSE`。
 
+## 推送到 GitHub（双击即可）
+
+仓库：https://github.com/ZwZ-1206/Margin
+
+1. 复制令牌到剪贴板（GitHub → Settings → Developer settings → Personal access tokens）
+   - 细粒度：Repository access 选 `Margin`，Permissions → **Contents: Read and write**
+   - 或经典：勾选 `repo` + `workflow`
+2. 双击根目录的 **`推送代码到GitHub.bat`**
+3. 脚本会自动：推送 `main` → 按 `version.json` 创建/复用 Release → 上传对应 APK
+
+细节：
+- 令牌只在该次命令中作为 URL 参数使用，**不会写入 `.git/config`**（脚本结束会把 origin 复位成干净地址）
+- 推送失败会自动重试 4 次，后两次会临时清空代理环境变量走直连
+- 输出里只显示令牌前 11 位
+
 ## 一键发版
 
 ```bash
