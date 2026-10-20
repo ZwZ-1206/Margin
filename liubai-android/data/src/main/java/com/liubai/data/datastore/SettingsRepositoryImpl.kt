@@ -27,6 +27,8 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         val LONG_BREAK = intPreferencesKey("pomodoro_long_break_min")
         val CYCLES = intPreferencesKey("pomodoro_cycles")
         val COUNTDOWN_MIN = intPreferencesKey("countdown_min")
+        /** 形如 "3:25,7:45"，标签 id → 上次使用的倒计时分钟 */
+        val COUNTDOWN_BY_TAG = stringPreferencesKey("countdown_min_by_tag")
         val AUTO_BREAK = booleanPreferencesKey("auto_start_break")
         val AUTO_NEXT = booleanPreferencesKey("auto_start_next_focus")
         val MONITOR = booleanPreferencesKey("monitor_enabled")
@@ -57,6 +59,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
                 autoStartNextFocus = p[Keys.AUTO_NEXT] ?: false,
             ),
             countdownMin = p[Keys.COUNTDOWN_MIN] ?: 30,
+            countdownMinByTag = decodeTagMinutes(p[Keys.COUNTDOWN_BY_TAG]),
             monitorEnabled = p[Keys.MONITOR] ?: true,
             preciseMonitor = p[Keys.PRECISE] ?: false,
             whiteNoise = p[Keys.NOISE],
@@ -86,6 +89,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             p[Keys.LONG_BREAK] = next.pomodoro.longBreakMin
             p[Keys.CYCLES] = next.pomodoro.cyclesBeforeLongBreak
             p[Keys.COUNTDOWN_MIN] = next.countdownMin
+            p[Keys.COUNTDOWN_BY_TAG] = encodeTagMinutes(next.countdownMinByTag)
             p[Keys.AUTO_BREAK] = next.pomodoro.autoStartBreak
             p[Keys.AUTO_NEXT] = next.pomodoro.autoStartNextFocus
             p[Keys.MONITOR] = next.monitorEnabled
@@ -101,5 +105,21 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             p[Keys.CH_BED_HOUR] = next.challenge.bedtimeHour
             p[Keys.CH_BED_MIN] = next.challenge.bedtimeMinute
         }
+    }
+
+    private fun encodeTagMinutes(map: Map<Long, Int>): String =
+        map.entries.joinToString(",") { "${it.key}:${it.value}" }
+
+    private fun decodeTagMinutes(raw: String?): Map<Long, Int> {
+        if (raw.isNullOrBlank()) return emptyMap()
+        return raw.split(',')
+            .mapNotNull { pair ->
+                val sep = pair.indexOf(':')
+                if (sep <= 0) return@mapNotNull null
+                val id = pair.substring(0, sep).toLongOrNull() ?: return@mapNotNull null
+                val min = pair.substring(sep + 1).toIntOrNull() ?: return@mapNotNull null
+                id to min
+            }
+            .toMap()
     }
 }

@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
@@ -246,12 +247,16 @@ fun SettingsScreen(
                     state.settings.challenge.bedtimeEnabled,
                 ) { on -> vm.setChallenge(context) { it.copy(bedtimeEnabled = on) } }
                 if (state.settings.challenge.bedtimeEnabled) {
-                    NumberRow("就寝小时（24h）", state.settings.challenge.bedtimeHour) { v ->
-                        vm.setChallenge(context) { it.copy(bedtimeHour = v.coerceIn(18, 27) % 24) }
-                    }
-                    NumberRow("就寝分钟", state.settings.challenge.bedtimeMinute) { v ->
-                        vm.setChallenge(context) { it.copy(bedtimeMinute = v.coerceIn(0, 59)) }
-                    }
+                    TimeRow(
+                        label = "就寝时间",
+                        hour = state.settings.challenge.bedtimeHour,
+                        minute = state.settings.challenge.bedtimeMinute,
+                        onPick = { h, m ->
+                            vm.setChallenge(context) {
+                                it.copy(bedtimeHour = h, bedtimeMinute = m)
+                            }
+                        },
+                    )
                 }
             }
         }
@@ -439,9 +444,104 @@ private fun NumberRow(label: String, value: Int, onValue: (Int) -> Unit) {
     }
 }
 
+/** 就寝小时的可选范围：当晚 18:00 到次日 03:00 */
+private val BEDTIME_HOURS = listOf(18, 19, 20, 21, 22, 23, 0, 1, 2, 3)
+
+/**
+ * 一行「就寝时间 23:30」。
+ * 之前拆成「就寝小时」+「就寝分钟」两个独立数字框，读起来像在问睡多少分钟，
+ * 实际只是设定时刻——合成一个时间控件就没有这个歧义了。
+ */
 @Composable
-private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+private fun TimeRow(
+    label: String,
+    hour: Int,
+    minute: Int,
+    onPick: (Int, Int) -> Unit,
+) {
     val extras = LocalExtraColors.current
+    var open by remember { mutableStateOf(false) }
+
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = extras.textSecondary,
+            modifier = Modifier.weight(1f),
+        )
+        OutlinedButton(onClick = { open = true }) {
+            Text(clockText(hour, minute), style = MaterialTheme.typography.titleMedium)
+        }
+    }
+
+    if (open) {
+        AlertDialog(
+            onDismissRequest = { open = false },
+            title = { Text("就寝时间") },
+            text = {
+                Column {
+                    Text(
+                        "几点上床",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = extras.textSecondary,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        OutlinedButton(onClick = { onPick(stepHour(hour, -1), minute) }) { Text("−") }
+                        Text(
+                            clockText(hour, minute),
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = extras.textPrimary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.weight(1f),
+                        )
+                        OutlinedButton(onClick = { onPick(stepHour(hour, 1), minute) }) { Text("＋") }
+                    }
+                    Spacer(Modifier.height(14.dp))
+                    Text(
+                        "分钟",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = extras.textSecondary,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(0, 15, 30, 45).forEach { m ->
+                            FilterChip(
+                                selected = minute == m,
+                                onClick = { onPick(hour, m) },
+                                label = { Text(":${m.toString().padStart(2, '0')}") },
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        "精确到 15 分钟就够了。提醒由系统调度，实际到达可能有几分钟误差。",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = extras.textTertiary,
+                    )
+                }
+            },
+            confirmButton = { TextButton(onClick = { open = false }) { Text("完成") } },
+        )
+    }
+}
+
+private fun stepHour(hour: Int, delta: Int): Int {
+    val i = BEDTIME_HOURS.indexOf(hour).takeIf { it >= 0 } ?: BEDTIME_HOURS.indexOf(23)
+    return BEDTIME_HOURS[(i + delta + BEDTIME_HOURS.size) % BEDTIME_HOURS.size]
+}
+
+private fun clockText(hour: Int, minute: Int): String =
+    "${(hour % 24).toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
+
+@Composable
+private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {    val extras = LocalExtraColors.current
     Row(
         Modifier.fillMaxWidth().padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,

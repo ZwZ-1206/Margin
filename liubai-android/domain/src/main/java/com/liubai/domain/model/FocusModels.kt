@@ -96,6 +96,8 @@ data class AppSettings(
     val dailyGoalMin: Int = 120,
     val pomodoro: PomodoroConfig = PomodoroConfig(),
     val countdownMin: Int = 30,
+    /** 每个标签上次使用的倒计时时长（分钟），选中标签时自动套用 */
+    val countdownMinByTag: Map<Long, Int> = emptyMap(),
     val monitorEnabled: Boolean = true,
     /** 精确监控：常驻通知 + 每分钟检查（更及时，更费电） */
     val preciseMonitor: Boolean = false,

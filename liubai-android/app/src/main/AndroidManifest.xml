@@ -26,6 +26,18 @@
     <!-- 应用内更新：下载完成后直接调起安装器 -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <!--
+      Android 11+ 的包可见性限制：不声明 queries 时 queryIntentActivities 只能拿到
+      极少数应用（设置限额的列表会只剩两三个）。这里声明 LAUNCHER intent，
+      足以枚举所有带桌面图标的用户应用；不用 QUERY_ALL_PACKAGES，范围更收敛。
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
     <application
         android:name=".LiubaiApplication"
         android:allowBackup="true"

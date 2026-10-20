@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -39,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -67,6 +69,7 @@ fun FocusScreen(
     var pickingAudio by remember { mutableStateOf(false) }
     var managingSounds by remember { mutableStateOf(false) }
     var pendingAudio by remember { mutableStateOf<Uri?>(null) }
+    var showCustomMin by remember { mutableStateOf(false) }
 
     // 选完文件后弹「命名」对话框
     val audioPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -244,21 +247,40 @@ fun FocusScreen(
                 )
 
                 if (state.mode == FocusMode.COUNTDOWN) {
-                    Spacer(Modifier.height(16.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf(10, 15, 25, 30, 45, 60, 90).forEach { min ->
+                    Spacer(Modifier.height(18.dp))
+                    Text(
+                        "时长（分钟）",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = extras.textSecondary,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        COUNTDOWN_PRESETS.forEach { min ->
                             FilterChip(
                                 selected = state.countdownMin == min,
                                 onClick = { vm.setCountdownMin(min) },
-                                label = { Text("$min 分") },
+                                label = {
+                                    Text("$min", maxLines = 1, style = MaterialTheme.typography.titleMedium)
+                                },
+                                modifier = Modifier.weight(1f),
                             )
                         }
                     }
-                    Text(
-                        "当前 ${state.countdownMin} 分钟，点上方数字可直接切换",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = extras.textTertiary,
-                    )
+                    Spacer(Modifier.height(8.dp))
+                    val custom = state.countdownMin !in COUNTDOWN_PRESETS
+                    OutlinedButton(
+                        onClick = { showCustomMin = true },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            if (custom) "自定义时长 · ${state.countdownMin} 分钟"
+                            else "自定义时长"
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(20.dp))
@@ -289,6 +311,16 @@ fun FocusScreen(
                                     label = { Text("${tag.emoji} ${tag.name}") },
                                 )
                             }
+                        }
+                        val remembered = state.selectedTagId
+                            ?.let { state.settings.countdownMinByTag[it] }
+                        if (remembered != null && state.mode == FocusMode.COUNTDOWN) {
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                "这个标签上次专注了 $remembered 分钟，已自动套用",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = extras.textTertiary,
+                            )
                         }
                     }
                 }
@@ -483,6 +515,38 @@ fun FocusScreen(
         )
     }
 
+    if (showCustomMin) {
+        var text by remember { mutableStateOf(state.countdownMin.toString()) }
+        AlertDialog(
+            onDismissRequest = { showCustomMin = false },
+            title = { Text("自定义时长") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = text,
+                        onValueChange = { text = it.filter { c -> c.isDigit() }.take(3) },
+                        label = { Text("分钟") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "可设 5–180 分钟。下次选中同一个标签会自动沿用这个时长。",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = extras.textTertiary,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    text.toIntOrNull()?.let { vm.setCountdownMin(it) }
+                    showCustomMin = false
+                }) { Text("确定") }
+            },
+            dismissButton = { TextButton(onClick = { showCustomMin = false }) { Text("取消") } },
+        )
+    }
+
     if (showStopConfirm) {
         AlertDialog(
             onDismissRequest = { showStopConfirm = false },
@@ -536,6 +600,8 @@ fun FocusScreen(
         )
     }
 }
+
+private val COUNTDOWN_PRESETS = listOf(15, 25, 45, 60)
 
 private fun builtinLabel(sound: WhiteNoiseSynth.Sound): String = when (sound) {
     WhiteNoiseSynth.Sound.RAIN -> "雨声"

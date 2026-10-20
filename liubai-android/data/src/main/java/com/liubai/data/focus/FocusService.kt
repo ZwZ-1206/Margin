@@ -6,11 +6,9 @@ import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Build
 import android.os.IBinder
 import android.os.SystemClock
-import androidx.core.content.ContextCompat
 import com.liubai.core.common.DurationFormat
 import com.liubai.data.di.ServiceLocator
 import com.liubai.domain.engine.EngineEvent
@@ -69,25 +67,12 @@ class FocusService : Service() {
     private var state: TimerState = TimerState()
     // 声音统一交给 SoundController（内置合成音色 + 用户导入音频）
 
-
-    /** 屏幕关闭时自动暂停（可配置） */
-    private val screenReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == Intent.ACTION_SCREEN_OFF && state.running) {
-                handleAction(ACTION_PAUSE)
-            }
-        }
-    }
+    // 不再监听 SCREEN_OFF 自动暂停：专注的本意就是放下手机，
+    // 锁屏恰恰是最该继续计时的动作。计时基于 elapsedRealtime，睡眠不影响准确性。
 
     override fun onCreate() {
         super.onCreate()
         FocusNotifications.ensureChannel(this)
-        ContextCompat.registerReceiver(
-            this,
-            screenReceiver,
-            IntentFilter(Intent.ACTION_SCREEN_OFF),
-            ContextCompat.RECEIVER_NOT_EXPORTED,
-        )
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -319,7 +304,6 @@ class FocusService : Service() {
     override fun onDestroy() {
         tickJob?.cancel()
         SoundController.stop()
-        runCatching { unregisterReceiver(screenReceiver) }
         super.onDestroy()
     }
 

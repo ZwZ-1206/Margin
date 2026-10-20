@@ -8,47 +8,66 @@ import androidx.lifecycle.viewModelScope
 import com.liubai.data.di.ServiceLocator
 import com.liubai.data.usage.AppLabelResolver
 import com.liubai.domain.model.AppLimit
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class InstalledApp(val packageName: String, val label: String)
 
 data class LimitsUiState(
     val limits: List<AppLimit> = emptyList(),
     val installed: List<InstalledApp> = emptyList(),
+    val loadingApps: Boolean = true,
 )
 
 class LimitsViewModel : ViewModel() {
 
     private val repo = ServiceLocator.limitsRepository
     private val installedFlow = MutableStateFlow<List<InstalledApp>>(emptyList())
-    private var loaded = false
+    private val loadingFlow = MutableStateFlow(true)
 
     val uiState: StateFlow<LimitsUiState> = combine(
         repo.observeLimits(),
         installedFlow,
-    ) { limits, installed ->
-        LimitsUiState(limits = limits, installed = installed)
+        loadingFlow,
+    ) { limits, installed, loading ->
+        LimitsUiState(limits = limits, installed = installed, loadingApps = loading)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LimitsUiState())
 
-    /** 载入可设置限额的应用（有启动入口的用户可见应用） */
+    /**
+     * 载入可设置限额的应用。
+     *
+     * 关键点：包枚举在 IO 线程做（几百个包名走 IPC，主线程会掉帧），
+     * 且依赖 Manifest 里的 <queries> 声明——没有它，Android 11+ 只返回两三个应用。
+     */
     fun loadInstalled(context: Context) {
-        if (loaded) return
-        loaded = true
-        val pm = context.packageManager
-        val launcher = Intent(Intent.ACTION_MAIN, null).addCategory(Intent.CATEGORY_LAUNCHER)
-        val resolver = AppLabelResolver(context)
-        val apps = pm.queryIntentActivities(launcher, PackageManager.MATCH_DEFAULT_ONLY)
-            .map { it.activityInfo.packageName }
-            .distinct()
-            .filter { it != context.packageName }
-            .map { InstalledApp(it, resolver.label(it)) }
-            .sortedBy { it.label }
-        installedFlow.value = apps
+        val appContext = context.applicationContext
+        viewModelScope.launch {
+            loadingFlow.value = true
+            val apps = withContext(Dispatchers.IO) {
+                runCatching {
+                    val pm = appContext.packageManager
+                    val launcher = Intent(Intent.ACTION_MAIN, null)
+                        .addCategory(Intent.CATEGORY_LAUNCHER)
+                    val resolver = AppLabelResolver(appContext)
+                    pm.queryIntentActivities(launcher, PackageManager.MATCH_DEFAULT_ONLY)
+                        .asSequence()
+                        .map { it.activityInfo.packageName }
+                        .filter { it != appContext.packageName }
+                        .distinct()
+                        .map { InstalledApp(it, resolver.label(it)) }
+                        .sortedBy { it.label.lowercase() }
+                        .toList()
+                }.getOrDefault(emptyList())
+            }
+            installedFlow.value = apps
+            loadingFlow.value = false
+        }
     }
 
     fun setLimit(packageName: String, minutes: Int) {

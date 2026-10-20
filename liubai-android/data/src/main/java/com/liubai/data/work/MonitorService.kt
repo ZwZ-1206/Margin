@@ -25,7 +25,15 @@ import kotlinx.coroutines.launch
  * 为什么需要它：WorkManager 周期任务最短 15 分钟，且受 Doze 影响；
  * 亮屏 / 解锁这类广播在 Android 8+ 不能静态注册，只能由存活进程动态接收。
  *
- * 代价：常驻一条通知 + 每 60 秒一次轻量查询（不持 WakeLock，锁屏后随系统节流）。
+ * 锁屏时的行为（明确写在这里，别再猜）：
+ *  - 进程不会死，但 CPU 休眠后 delay() 基于 uptimeMillis 不再推进，
+ *    所以"每分钟一次"在锁屏期间会停摆。这是有意的：锁屏时前台是 SystemUI，
+ *    任何真实应用都不产生使用时长，继续轮询只会白耗电。
+ *  - 解锁/亮屏的瞬间会立即补一次采集，锁屏前最后不到一分钟的用量也在这一次里入账。
+ *  - 额外挂 SCREEN_OFF：在熄屏那一刻先结算一次，把"锁屏前这段时间"落库，
+ *    避免用户解锁后看到的数据比实际少一截。
+ *
+ * 代价：常驻一条通知 + 亮屏期间每 60 秒一次轻量查询（不持 WakeLock）。
  */
 class MonitorService : Service() {
 
@@ -47,7 +55,10 @@ class MonitorService : Service() {
     private val screenReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
-                Intent.ACTION_SCREEN_ON, Intent.ACTION_USER_PRESENT -> tick()
+                Intent.ACTION_SCREEN_ON,
+                Intent.ACTION_USER_PRESENT,
+                Intent.ACTION_SCREEN_OFF,
+                -> tick()
             }
         }
     }
@@ -69,7 +80,10 @@ class MonitorService : Service() {
         ContextCompat.registerReceiver(
             this,
             screenReceiver,
-            IntentFilter(Intent.ACTION_SCREEN_ON).apply { addAction(Intent.ACTION_USER_PRESENT) },
+            IntentFilter(Intent.ACTION_SCREEN_ON).apply {
+                addAction(Intent.ACTION_USER_PRESENT)
+                addAction(Intent.ACTION_SCREEN_OFF)
+            },
             ContextCompat.RECEIVER_NOT_EXPORTED,
         )
     }

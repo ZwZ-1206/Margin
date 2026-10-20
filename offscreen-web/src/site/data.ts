@@ -46,6 +46,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.2.8',
+    date: '2026-10-20',
+    status: 'released',
+    items: [
+      '<b>白噪音</b>：重写合成引擎，修掉持续爆音；六种音色电平重新对齐，切换不再有咔哒声',
+      '<b>专注</b>：倒计时改成四档常用时长 + 自定义，并按标签记住上次用的时长',
+      '<b>限额</b>：修复 Android 11+ 下读不到应用列表；选择面板补上返回箭头与关闭',
+      '<b>就寝</b>：就寝时间合并为一个控件，不再拆成「小时 + 分钟」两个框',
+      '<b>计时</b>：锁屏不再自动暂停专注',
+    ],
+  },
+  {
     version: 'v1.2.7',
     date: '2026-10-20',
     status: 'released',

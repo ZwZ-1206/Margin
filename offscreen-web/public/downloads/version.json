@@ -1,15 +1,15 @@
 {
-  "version": "1.2.7",
-  "versionCode": 10,
+  "version": "1.2.8",
+  "versionCode": 11,
   "sizeMB": 3,
   "minAndroid": "Android 9.0",
   "targetAndroid": "Android 16",
   "releaseDate": "2026-10-20",
-  "notes": "v1.2.7：完善「M.」图标——自适应层改为纯奶油底 + 字母，形状完全交给启动器遮罩；官网 favicon 与 PWA 图标同步替换。",
+  "notes": "v1.2.8：重写白噪音合成引擎，修掉持续爆音；倒计时改为四档常用时长 + 自定义，并按标签记住上次时长；修复 Android 11+ 下添加限额读不到应用、以及面板没有返回入口；就寝时间合并为一个控件；锁屏不再自动暂停专注。",
   "apk": {
-    "url": "downloads/margin-1.2.7.apk",
-    "sha256": "032be974b58a392db3377e346b538c24006a19bbd72b0f2f81b5cec2874a58b2",
-    "sizeBytes": 3111845
+    "url": "downloads/margin-1.2.8.apk",
+    "sha256": "640383808d3e0a5f0b41f143c55bd0b349f987be0047bc8129fdc9c1cad2df1e",
+    "sizeBytes": 3164182
   },
   "mirrors": [
     {

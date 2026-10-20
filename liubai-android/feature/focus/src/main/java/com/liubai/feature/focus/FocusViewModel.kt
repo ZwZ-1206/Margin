@@ -90,9 +90,17 @@ class FocusViewModel : ViewModel() {
         modeFlow.value = mode
     }
 
-    /** 再次点击同一个标签 = 取消选择 */
+    /** 再次点击同一个标签 = 取消选择；选中时套用该标签上次用的倒计时时长 */
     fun selectTag(id: Long?) {
-        tagFlow.value = if (tagFlow.value == id) null else id
+        val next = if (tagFlow.value == id) null else id
+        tagFlow.value = next
+        if (next == null) return
+        val remembered = uiState.value.settings.countdownMinByTag[next] ?: return
+        if (modeFlow.value == FocusMode.COUNTDOWN && uiState.value.countdownMin != remembered) {
+            viewModelScope.launch {
+                settingsRepo.update { it.copy(countdownMin = remembered) }
+            }
+        }
     }
 
     fun setCountdownMin(minutes: Int) {
@@ -179,6 +187,15 @@ class FocusViewModel : ViewModel() {
 
     fun start(context: Context) {
         val state = uiState.value
+        // 记住「这个标签这次用了多久」，下次选中它直接沿用
+        val tagId = state.selectedTagId
+        if (state.mode == FocusMode.COUNTDOWN && tagId != null) {
+            viewModelScope.launch {
+                settingsRepo.update { s ->
+                    s.copy(countdownMinByTag = s.countdownMinByTag + (tagId to state.countdownMin))
+                }
+            }
+        }
         val intent = FocusService.startIntent(
             context = context,
             mode = state.mode,
