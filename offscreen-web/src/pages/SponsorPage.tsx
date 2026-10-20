@@ -39,7 +39,7 @@ export function SponsorPage() {
             <h3 style={{ marginTop: 'var(--space-8)' }}>不花钱也能支持</h3>
             <p>
               给仓库点个 Star、把 App 推荐给一个总在刷手机的朋友、
-              或者在邮件里告诉我哪里用着别扭——这些都和钱一样有用。
+              或者在邮件里告诉我哪里用着别扭——这些都能令作者开心。
             </p>
 
             <div className="sponsor-actions">
