@@ -86,3 +86,18 @@ npm run build      # 构建（产物在 dist/）
 ## 许可
 
 MIT License，见 `liubai-android/LICENSE`。
+
+## 一键发版
+
+```bash
+# 1) 打出 release APK 并双签名
+cd liubai-android && ./gradlew :app:assembleRelease && ./sign-release.sh
+
+# 2) 把 APK 放进官网，更新 version.json 的 version/sizeMB/sha256/notes
+#    文件：offscreen-web/public/downloads/margin-<版本>.apk
+
+# 3) 构建 + 部署 + 线上校验
+cd .. && ./deploy.sh
+```
+
+`deploy.sh` 复用本机 wrangler 登录态，无需每次给 token；末尾会自动比对线上与本地 APK 的 SHA-256，不一致就非零退出。
