@@ -7,12 +7,6 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import com.liubai.data.report.DailyReportNotifier
 import kotlinx.coroutines.CoroutineScope
@@ -85,43 +79,7 @@ class MainActivity : ComponentActivity() {
             // 每次进入 App 顺带刷新桌面小部件（系统定时之外的数据新鲜度保障）
             MarginWidgetProvider.updateAll(this)
 
-            // 首次进入若未授予「使用情况访问」，主动引导一次
-            var showUsageDialog by remember { mutableStateOf(false) }
-            LaunchedEffect(Unit) {
-                if (!com.liubai.data.usage.UsageAccess.isGranted(this@MainActivity)) {
-                    val prefs = getSharedPreferences("onboarding", MODE_PRIVATE)
-                    val asked = prefs.getBoolean("usage_asked", false)
-                    showUsageDialog = !asked
-                    if (!asked) prefs.edit().putBoolean("usage_asked", true).apply()
-                }
-            }
-
             LiubaiTheme(darkTheme = dark) {
-                if (showUsageDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showUsageDialog = false },
-                        title = { Text("开启屏幕洞察") },
-                        text = {
-                            Text(
-                                "留白需要「使用情况访问」权限，才能统计每天各应用的使用时长、生成日报与限额提醒。\n\n" +
-                                    "这是安卓唯一的官方途径，数据只在你的手机里，不会上传。拒绝也可以正常使用专注功能。",
-                            )
-                        },
-                        confirmButton = {
-                            TextButton(onClick = {
-                                showUsageDialog = false
-                                startActivity(
-                                    Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                )
-                            }) { Text("去授权") }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showUsageDialog = false }) { Text("稍后") }
-                        },
-                    )
-                }
-
                 AppRoot(
                     dark = dark,
                     onGrantUsagePermission = {

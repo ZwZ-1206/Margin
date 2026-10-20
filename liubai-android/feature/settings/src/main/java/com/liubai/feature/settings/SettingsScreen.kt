@@ -45,7 +45,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import com.liubai.core.designsystem.component.PermissionRationaleDialog
 import com.liubai.core.designsystem.component.SectionCard
+import com.liubai.data.usage.UsageAccess
 import com.liubai.core.designsystem.component.SegmentedToggle
 import com.liubai.core.designsystem.theme.LocalExtraColors
 import com.liubai.domain.model.ThemeMode
@@ -62,6 +66,12 @@ fun SettingsScreen(
     val extras = LocalExtraColors.current
     val context = LocalContext.current
     var showSponsorDialog by remember { mutableStateOf(false) }
+    var showPermDialog by remember { mutableStateOf(false) }
+    // 权限状态不是响应式的：从系统设置返回时重新检查一次
+    var usageGranted by remember { mutableStateOf(UsageAccess.isGranted(context)) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        usageGranted = UsageAccess.isGranted(context)
+    }
     var toast by remember { mutableStateOf<String?>(null) }
 
     val pickQr = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
@@ -170,15 +180,34 @@ fun SettingsScreen(
                         color = extras.textTertiary,
                     )
                 }
-                Spacer(Modifier.height(8.dp))
-                OutlinedButton(
-                    onClick = {
-                        context.startActivity(
-                            Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "使用情况访问权限",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = extras.textPrimary,
+                        )
+                        Text(
+                            if (usageGranted) "已授权，正在统计各应用使用时长" else "未授权，屏幕洞察与日报不可用",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (usageGranted) extras.success else extras.warning,
                         )
                     }
-                ) { Text("检查权限状态") }
+                    if (usageGranted) {
+                        OutlinedButton(onClick = {
+                            context.startActivity(
+                                Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                        }) { Text("管理") }
+                    } else {
+                        Button(onClick = { showPermDialog = true }) { Text("去授权") }
+                    }
+                }
             }
         }
 
@@ -293,7 +322,7 @@ fun SettingsScreen(
             SectionCard {
                 Text("关于", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(8.dp))
-                InfoRow("版本", "1.2.3")
+                InfoRow("版本", "1.2.4")
                 InfoRow("名称", "Margin「留白」")
                 InfoRow("官方网站", "margin.liubai.app")
                 InfoRow("开源许可", "MIT License")
@@ -326,6 +355,24 @@ fun SettingsScreen(
                 }) { Text("选择图片") }
             },
             dismissButton = { TextButton(onClick = { showSponsorDialog = false }) { Text("取消") } },
+        )
+    }
+
+    if (showPermDialog) {
+        PermissionRationaleDialog(
+            title = "开启屏幕洞察",
+            message = "留白需要「使用情况访问」权限，才能统计各应用的使用时长、" +
+                "生成每日报告与限额提醒。\n\n" +
+                "这是安卓唯一的官方途径：数据只存在你的手机里，不会上传到任何服务器。" +
+                "拒绝也不影响专注、标签与白噪音功能。",
+            onConfirm = {
+                showPermDialog = false
+                context.startActivity(
+                    Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            },
+            onDismiss = { showPermDialog = false },
         )
     }
 

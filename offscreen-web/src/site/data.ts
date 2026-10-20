@@ -46,6 +46,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.2.4',
+    date: '2026-10-20',
+    status: 'released',
+    items: [
+      '<b>权限引导</b>：首次启动自动弹窗说明并直达授权页；之后每次点击「开启屏幕洞察」都会再次弹窗说明，不再只问一次',
+      '<b>设置页入口</b>：新增「使用情况访问权限」一栏，显示已授权 / 未授权状态，可直接去授权或管理',
+      '<b>状态刷新</b>：从系统设置返回时自动重新检查权限，不用重启 App',
+    ],
+  },
+  {
     version: 'v1.2.3',
     date: '2026-10-20',
     status: 'released',

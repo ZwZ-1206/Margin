@@ -1,14 +1,14 @@
 {
-  "version": "1.2.3",
-  "versionCode": 6,
+  "version": "1.2.4",
+  "versionCode": 7,
   "sizeMB": 3,
   "minAndroid": "Android 9.0",
   "targetAndroid": "Android 16",
   "releaseDate": "2026-10-20",
-  "notes": "v1.2.3：修复进入专注页与开始专注时的闪退；新增使用情况权限引导、通知权限申请，以及次日打开 App 推送昨日报告。完全免费，无会员，无广告。",
+  "notes": "v1.2.4：首次启动自动引导授权；之后每次点击权限入口都会先说明用途；设置页新增「使用情况访问权限」入口与状态。完全免费，无会员，无广告。",
   "apk": {
-    "url": "downloads/margin-1.2.3.apk",
-    "sha256": "c67067184385925780ae09f13439016d3b60cc2850d9dd951f31e73ec25140f9",
+    "url": "downloads/margin-1.2.4.apk",
+    "sha256": "c170f8d5290e4217d552e8771ad2f848a1e00b3d6d81da77b1aa050bb982c488",
     "sizeBytes": 2922690
   },
   "mirrors": [

@@ -20,7 +20,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.liubai.core.common.DurationFormat
+import com.liubai.core.designsystem.component.PermissionRationaleDialog
 import com.liubai.core.designsystem.component.RingProgress
 import com.liubai.core.designsystem.component.SectionCard
 import com.liubai.core.designsystem.component.StatTile
@@ -47,6 +52,19 @@ fun HomeScreen(
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     val extras = LocalExtraColors.current
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var showPermissionDialog by remember { mutableStateOf(false) }
+
+    // 只在「首次安装后的第一次启动」自动弹一次；之后仅当用户点击权限入口时才弹
+    LaunchedEffect(state.hasUsagePermission) {
+        if (!state.hasUsagePermission) {
+            val prefs = context.getSharedPreferences("onboarding", android.content.Context.MODE_PRIVATE)
+            if (!prefs.getBoolean("usage_asked", false)) {
+                prefs.edit().putBoolean("usage_asked", true).apply()
+                showPermissionDialog = true
+            }
+        }
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize().padding(horizontal = 20.dp),
@@ -88,7 +106,7 @@ fun HomeScreen(
                         color = extras.textSecondary,
                     )
                     Spacer(Modifier.height(12.dp))
-                    Button(onClick = onGrantPermission) { Text("去授权") }
+                    Button(onClick = { showPermissionDialog = true }) { Text("开启屏幕洞察") }
                 }
             }
         }
@@ -235,7 +253,23 @@ fun HomeScreen(
 
         item { Spacer(Modifier.height(24.dp)) }
     }
+
+    if (showPermissionDialog) {
+        PermissionRationaleDialog(
+            title = "开启屏幕洞察",
+            message = "留白需要「使用情况访问」权限，才能统计各应用的使用时长、" +
+                "生成每日报告与限额提醒。\n\n" +
+                "这是安卓唯一的官方途径：数据只存在你的手机里，不会上传到任何服务器。" +
+                "拒绝也不影响专注、标签与白噪音功能。",
+            onConfirm = {
+                showPermissionDialog = false
+                onGrantPermission()
+            },
+            onDismiss = { showPermissionDialog = false },
+        )
+    }
 }
+
 
 /** Drawable → Bitmap?（Image 位图加载；失败时返回 null 由占位承接） */
 private fun android.graphics.drawable.Drawable.toBitmapOrNull(): androidx.compose.ui.graphics.ImageBitmap? =
