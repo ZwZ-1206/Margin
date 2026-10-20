@@ -46,6 +46,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.2.2',
+    date: '2026-10-20',
+    status: 'released',
+    items: [
+      '<b>真正修复安装失败</b>：清单里存在非法的空 <code>backupAgent</code> 属性，导致部分 ROM 解析失败并提示「安装包已损坏」，已移除',
+      '<b>签名</b>：继续保持 v1 + v2 双签名，兼容 ColorOS / MIUI 等国产 ROM 的安装器',
+      '<b>建议</b>：若之前下载过旧包，请先删除再重新下载本版',
+    ],
+  },
+  {
     version: 'v1.2.1',
     date: '2026-10-20',
     status: 'released',

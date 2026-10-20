@@ -1,14 +1,14 @@
 {
-  "version": "1.2.1",
-  "versionCode": 4,
+  "version": "1.2.2",
+  "versionCode": 5,
   "sizeMB": 3,
   "minAndroid": "Android 9.0",
   "targetAndroid": "Android 16",
   "releaseDate": "2026-10-20",
-  "notes": "v1.2.1：修复部分机型（OPPO/ColorOS 等）安装时提示「安装包已损坏」的问题——现同时启用 v1 + v2 签名。完全免费，无会员，无广告。",
+  "notes": "v1.2.2：修复「安装包已损坏」——移除了清单中非法的空 backupAgent 属性，并保持 v1 + v2 双签名。完全免费，无会员，无广告。",
   "apk": {
-    "url": "downloads/margin-1.2.1.apk",
-    "sha256": "2b2c83fbb466d9a3aa6fd77c3c72b4eb769644fc9b6543dbc7b9537f0262a6e1",
+    "url": "downloads/margin-1.2.2.apk",
+    "sha256": "8f1f31dab43b330a4c9ab0871e3125b351e0fb76d076ed421b4a3cea67ebb6b4",
     "sizeBytes": 2906306
   },
   "mirrors": [
