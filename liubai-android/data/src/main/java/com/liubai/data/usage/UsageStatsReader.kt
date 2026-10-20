@@ -91,8 +91,28 @@ class UsageStatsReader(private val context: Context) {
         return count
     }
 
-    /** 今日系统侧原始总时长（用于缺口检测的保守上界参考） */
-    fun systemTotalToday(): Long {
+    /**
+     * 近 [days] 天真正有前台使用记录的包名。
+     *
+     * 这是「读全应用」的第二条腿：某些应用没有 LAUNCHER 入口（插件、被启动器隐藏、
+     * 只有快捷方式的工具），包可见性声明读不到它们，但系统用量统计里一定有。
+     * 两条来源合并后，用户实际用过的应用不会漏。
+     */
+    fun packagesWithUsage(days: Int = 30): List<String> {
+        val mgr = usm ?: return emptyList()
+        val end = System.currentTimeMillis()
+        val begin = end - days * 24 * 3600_000L
+        val stats = runCatching {
+            mgr.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, begin, end)
+        }.getOrNull() ?: return emptyList()
+        return stats.asSequence()
+            .filter { it.totalTimeInForeground > 0 && it.packageName != null }
+            .map { it.packageName }
+            .distinct()
+            .toList()
+    }
+
+    /** 今日系统侧原始总时长（用于缺口检测的保守上界参考） */    fun systemTotalToday(): Long {
         val mgr = usm ?: return 0L
         val cal = java.util.Calendar.getInstance().apply {
             set(java.util.Calendar.HOUR_OF_DAY, 0)

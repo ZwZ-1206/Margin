@@ -38,6 +38,18 @@
         </intent>
     </queries>
 
+    <!--
+      QUERY_ALL_PACKAGES：让 getApplicationInfo / getApplicationLabel / getApplicationIcon
+      对任意包名可用。没有它，即使通过 UsageStats 拿到了包名，也解析不出应用名和图标，
+      列表里只能显示 com.xxx.yyy。
+
+      只有「设置应用限额」这一处用到，用途与权限语义完全吻合。本应用不走 Google Play
+      分发（官网 + GitHub 直发 APK），因此不涉及 Play 对该权限的类别审核。
+    -->
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
     <application
         android:name=".LiubaiApplication"
         android:allowBackup="true"

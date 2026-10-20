@@ -46,6 +46,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.2.9',
+    date: '2026-10-20',
+    status: 'released',
+    items: [
+      '<b>限额</b>：应用列表改为多渠道合并，没有桌面图标、被启动器隐藏、装上还没用过的应用也能读到，并正确显示中文名与图标',
+      '<b>限额</b>：列表按拼音排序，搜索同时匹配应用名与包名',
+    ],
+  },
+  {
     version: 'v1.2.8',
     date: '2026-10-20',
     status: 'released',

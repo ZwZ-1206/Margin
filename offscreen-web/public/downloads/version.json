@@ -1,15 +1,15 @@
 {
-  "version": "1.2.8",
-  "versionCode": 11,
+  "version": "1.2.9",
+  "versionCode": 12,
   "sizeMB": 3,
   "minAndroid": "Android 9.0",
   "targetAndroid": "Android 16",
   "releaseDate": "2026-10-20",
-  "notes": "v1.2.8：重写白噪音合成引擎，修掉持续爆音；倒计时改为四档常用时长 + 自定义，并按标签记住上次时长；修复 Android 11+ 下添加限额读不到应用、以及面板没有返回入口；就寝时间合并为一个控件；锁屏不再自动暂停专注。",
+  "notes": "v1.2.9：应用限额的应用列表改为多渠道合并——没有桌面图标、被启动器隐藏、装上还没用过的应用也能读到，并正确显示中文名与图标；列表按拼音排序，搜索同时匹配应用名与包名。",
   "apk": {
-    "url": "downloads/margin-1.2.8.apk",
-    "sha256": "640383808d3e0a5f0b41f143c55bd0b349f987be0047bc8129fdc9c1cad2df1e",
-    "sizeBytes": 3164182
+    "url": "downloads/margin-1.2.9.apk",
+    "sha256": "9c60f986827f9ec210de0d230247d720b0e881354399821615b045712b77a09c",
+    "sizeBytes": 3164199
   },
   "mirrors": [
     {

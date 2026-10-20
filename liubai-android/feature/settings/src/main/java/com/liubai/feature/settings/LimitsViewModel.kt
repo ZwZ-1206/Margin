@@ -2,11 +2,14 @@ package com.liubai.feature.settings
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.liubai.data.di.ServiceLocator
 import com.liubai.data.usage.AppLabelResolver
+import com.liubai.data.usage.UsageAccess
+import com.liubai.data.usage.UsageStatsReader
 import com.liubai.domain.model.AppLimit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,8 +45,13 @@ class LimitsViewModel : ViewModel() {
     /**
      * 载入可设置限额的应用。
      *
-     * 关键点：包枚举在 IO 线程做（几百个包名走 IPC，主线程会掉帧），
-     * 且依赖 Manifest 里的 <queries> 声明——没有它，Android 11+ 只返回两三个应用。
+     * 四个来源合并，缺一不可：
+     *  1. LAUNCHER intent —— 有桌面图标的应用（绝大多数）
+     *  2. 非系统应用全量 —— 装上但没有图标、也还没用过的应用
+     *  3. UsageStats 近 30 天有使用记录的包 —— 有图标但被启动器隐藏的、只有快捷方式的
+     *  4. QUERY_ALL_PACKAGES —— 让以上包名的 label / icon 能正确解析（否则只剩包名）
+     *
+     * 包枚举在 IO 线程做：几百个包名逐个走 IPC，主线程会掉帧。
      */
     fun loadInstalled(context: Context) {
         val appContext = context.applicationContext
@@ -52,16 +60,38 @@ class LimitsViewModel : ViewModel() {
             val apps = withContext(Dispatchers.IO) {
                 runCatching {
                     val pm = appContext.packageManager
-                    val launcher = Intent(Intent.ACTION_MAIN, null)
-                        .addCategory(Intent.CATEGORY_LAUNCHER)
                     val resolver = AppLabelResolver(appContext)
-                    pm.queryIntentActivities(launcher, PackageManager.MATCH_DEFAULT_ONLY)
-                        .asSequence()
-                        .map { it.activityInfo.packageName }
+
+                    val launcherPkgs = pm.queryIntentActivities(
+                        Intent(Intent.ACTION_MAIN, null).addCategory(Intent.CATEGORY_LAUNCHER),
+                        PackageManager.MATCH_DEFAULT_ONLY,
+                    ).asSequence().map { it.activityInfo.packageName }.toList()
+
+                    // 用户自己装的应用：排除纯系统组件，保留被系统升级过的（如系统浏览器）
+                    val thirdPartyPkgs = pm.getInstalledApplications(0).asSequence()
+                        .filter { info ->
+                            info.flags and ApplicationInfo.FLAG_SYSTEM == 0 ||
+                                info.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP != 0
+                        }
+                        .map { it.packageName }
+                        .toList()
+
+                    val usedPkgs = if (UsageAccess.isGranted(appContext)) {
+                        runCatching { UsageStatsReader(appContext).packagesWithUsage(30) }
+                            .getOrDefault(emptyList())
+                    } else {
+                        emptyList()
+                    }
+
+                    (launcherPkgs + thirdPartyPkgs + usedPkgs).asSequence()
                         .filter { it != appContext.packageName }
                         .distinct()
-                        .map { InstalledApp(it, resolver.label(it)) }
-                        .sortedBy { it.label.lowercase() }
+                        .mapNotNull { pkg ->
+                            // 解析不到 ApplicationInfo 的，说明系统里已卸载或不可见，跳过
+                            runCatching { pm.getApplicationInfo(pkg, 0) }.getOrNull()
+                                ?.let { InstalledApp(pkg, resolver.label(pkg)) }
+                        }
+                        .sortedWith(compareBy(java.text.Collator.getInstance(java.util.Locale.CHINA)) { it.label })
                         .toList()
                 }.getOrDefault(emptyList())
             }
