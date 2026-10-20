@@ -9,14 +9,16 @@ import android.content.Intent
 import android.widget.RemoteViews
 import com.liubai.core.common.DurationFormat
 import com.liubai.data.widget.WidgetData
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 
 /**
  * 桌面小部件：RemoteViews 实现（无额外依赖）。
  * 小 2x2 与中 4x1 两种尺寸，展示今日屏幕 / 专注 / 拿起次数。
  *
- * 更新时机：系统定时（30 分钟）、App 打开、每次采集完成、开机。点击打开 App。
+ * 更新时机：系统定时（30 分钟）、App 打开、每次采集完成、开机、精确监控轮询。
+ * 点击打开 App（用包管理器启动 Intent，避免 R8 混淆后类名找不到）。
  */
 open class MarginWidgetProvider : AppWidgetProvider() {
 
@@ -29,40 +31,51 @@ open class MarginWidgetProvider : AppWidgetProvider() {
     companion object {
 
         fun updateAll(context: Context) {
-            val mgr = AppWidgetManager.getInstance(context) ?: return
-            val data = runBlocking(Dispatchers.IO) { WidgetData.snapshot(context) }
-            for (entry in providers(context)) {
-                val (provider, layoutId) = entry
-                val ids = mgr.getAppWidgetIds(provider)
-                if (ids.isEmpty()) continue
-                for (id in ids) {
-                    mgr.updateAppWidget(id, build(context, layoutId, data))
+            val app = context.applicationContext
+            // onUpdate 跑在主线程，读库 + 查 UsageStats 会卡 UI，统一放后台
+            CoroutineScope(Dispatchers.IO).launch {
+                val data = runCatching { WidgetData.snapshot(app) }.getOrNull() ?: return@launch
+                val mgr = AppWidgetManager.getInstance(app) ?: return@launch
+                providers(app).forEach { (provider, layoutId) ->
+                    val ids = mgr.getAppWidgetIds(provider)
+                    if (ids.isEmpty()) return@forEach
+                    val views = build(app, layoutId, data)
+                    ids.forEach { id -> mgr.updateAppWidget(id, views) }
                 }
             }
         }
 
-        private fun providers(context: Context) = listOf(
-            ComponentName(context, MarginWidgetProvider::class.java) to com.liubai.app.R.layout.widget_small,
-            ComponentName(context, MarginWidgetMediumProvider::class.java) to com.liubai.app.R.layout.widget_medium,
+        private fun providers(context: Context): List<Pair<ComponentName, Int>> = listOf(
+            ComponentName(context, MarginWidgetProvider::class.java) to
+                com.liubai.app.R.layout.widget_small,
+            ComponentName(context, MarginWidgetMediumProvider::class.java) to
+                com.liubai.app.R.layout.widget_medium,
         )
 
         private fun build(context: Context, layoutId: Int, data: WidgetData.Snapshot): RemoteViews {
             val views = RemoteViews(context.packageName, layoutId)
-            views.setTextViewText(com.liubai.app.R.id.widget_screen, DurationFormat.chinese(data.screenMs))
-            views.setTextViewText(com.liubai.app.R.id.widget_focus, "专注 ${DurationFormat.chinese(data.focusMs)}")
+            views.setTextViewText(
+                com.liubai.app.R.id.widget_screen,
+                DurationFormat.chinese(data.screenMs),
+            )
+            views.setTextViewText(
+                com.liubai.app.R.id.widget_focus,
+                "专注 ${DurationFormat.chinese(data.focusMs)}",
+            )
             if (layoutId == com.liubai.app.R.layout.widget_medium) {
                 views.setTextViewText(com.liubai.app.R.id.widget_pickup, "${data.pickups}")
             }
-            val intent = Intent(context, Class.forName("com.liubai.app.MainActivity")).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)
+                ?.apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP }
+            if (launch != null) {
+                views.setOnClickPendingIntent(
+                    android.R.id.background,
+                    PendingIntent.getActivity(
+                        context, 0, launch,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                    ),
+                )
             }
-            views.setOnClickPendingIntent(
-                android.R.id.background,
-                PendingIntent.getActivity(
-                    context, 0, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-                ),
-            )
             return views
         }
     }

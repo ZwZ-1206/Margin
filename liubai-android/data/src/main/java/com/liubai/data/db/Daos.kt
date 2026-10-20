@@ -82,7 +82,7 @@ interface LimitDao {
 @Dao
 interface CheckpointDao {
     @Query("SELECT * FROM timer_checkpoint WHERE id = 0")
-    fun observe(): Flow<TimerCheckpointEntity>
+    fun observe(): Flow<TimerCheckpointEntity?>
 
     @Query("SELECT * FROM timer_checkpoint WHERE id = 0")
     suspend fun load(): TimerCheckpointEntity?

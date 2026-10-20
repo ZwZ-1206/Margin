@@ -106,7 +106,10 @@ class FocusService : Service() {
         return START_STICKY
     }
 
-    private fun handleStart(intent: Intent) {
+    private fun handleStart(intent: Intent) = runCatching { doStart(intent) }
+        .onFailure { android.util.Log.e("FocusService", "start failed", it) }
+
+    private fun doStart(intent: Intent) {
         val mode = runCatching { FocusMode.valueOf(intent.getStringExtra(EXTRA_MODE) ?: "") }
             .getOrDefault(FocusMode.POMODORO)
         val tagId = if (intent.hasExtra(EXTRA_TAG_ID)) intent.getLongExtra(EXTRA_TAG_ID, 0L) else null

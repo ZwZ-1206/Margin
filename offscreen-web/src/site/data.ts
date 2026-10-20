@@ -46,6 +46,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.2.3',
+    date: '2026-10-20',
+    status: 'released',
+    items: [
+      '<b>修复闪退</b>：进入「专注」页崩溃——计时断点查询在空表上取非空值；「开始专注」崩溃——通知里的启动 Intent 用了会被 R8 改名的类名字符串',
+      '<b>权限引导</b>：首次启动弹出说明并直达「使用情况访问」授权页；Android 13+ 自动申请通知权限',
+      '<b>昨日报告</b>：次日首次打开 App 推送昨日屏幕时间、专注时长与占用最多的应用（每天只推一次，无数据不打扰）',
+      '<b>更稳</b>：专注服务的启动路径加了异常保护，即使失败也不会让 App 退出',
+    ],
+  },
+  {
     version: 'v1.2.2',
     date: '2026-10-20',
     status: 'released',

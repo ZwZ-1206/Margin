@@ -94,7 +94,8 @@ class FocusViewModel : ViewModel() {
             tagId = tagId,
             countdownMin = state.countdownMin,
         )
-        context.startForegroundService(intent)
+        runCatching { context.startForegroundService(intent) }
+            .onFailure { android.util.Log.e("FocusViewModel", "start service failed", it) }
     }
 
     fun pause(context: Context) {

@@ -1,15 +1,15 @@
 {
-  "version": "1.2.2",
-  "versionCode": 5,
+  "version": "1.2.3",
+  "versionCode": 6,
   "sizeMB": 3,
   "minAndroid": "Android 9.0",
   "targetAndroid": "Android 16",
   "releaseDate": "2026-10-20",
-  "notes": "v1.2.2：修复「安装包已损坏」——移除了清单中非法的空 backupAgent 属性，并保持 v1 + v2 双签名。完全免费，无会员，无广告。",
+  "notes": "v1.2.3：修复进入专注页与开始专注时的闪退；新增使用情况权限引导、通知权限申请，以及次日打开 App 推送昨日报告。完全免费，无会员，无广告。",
   "apk": {
-    "url": "downloads/margin-1.2.2.apk",
-    "sha256": "8f1f31dab43b330a4c9ab0871e3125b351e0fb76d076ed421b4a3cea67ebb6b4",
-    "sizeBytes": 2906306
+    "url": "downloads/margin-1.2.3.apk",
+    "sha256": "c67067184385925780ae09f13439016d3b60cc2850d9dd951f31e73ec25140f9",
+    "sizeBytes": 2922690
   },
   "mirrors": [
     {

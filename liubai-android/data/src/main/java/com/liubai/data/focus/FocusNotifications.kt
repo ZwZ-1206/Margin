@@ -52,14 +52,15 @@ object FocusNotifications {
             "剩余 ${DurationFormat.timer(remainingMs)}" + if (!running) "（已暂停）" else ""
         }
 
-        val contentIntent = PendingIntent.getActivity(
-            context,
-            0,
-            Intent(context, Class.forName("com.liubai.app.MainActivity")).apply {
-                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-            },
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
+        // 用包管理器的启动 Intent，避免 Class.forName 在 R8 混淆后找不到类
+        val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+            ?.apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP }
+        val contentIntent = launchIntent?.let {
+            PendingIntent.getActivity(
+                context, 0, it,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
+        }
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
@@ -67,7 +68,7 @@ object FocusNotifications {
             .setContentText(text)
             .setOngoing(running)
             .setOnlyAlertOnce(true)
-            .setContentIntent(contentIntent)
+            .apply { contentIntent?.let { setContentIntent(it) } }
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
 
         if (phase == TimerPhase.FOCUS || phase == TimerPhase.BREAK) {

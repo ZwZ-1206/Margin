@@ -293,7 +293,7 @@ fun SettingsScreen(
             SectionCard {
                 Text("关于", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(8.dp))
-                InfoRow("版本", "1.2.2")
+                InfoRow("版本", "1.2.3")
                 InfoRow("名称", "Margin「留白」")
                 InfoRow("官方网站", "margin.liubai.app")
                 InfoRow("开源许可", "MIT License")

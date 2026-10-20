@@ -15,7 +15,8 @@ class UsageStatsReader(private val context: Context) {
     private val usm: UsageStatsManager? =
         context.getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager
 
-    fun hasPermission(): Boolean = usm != null
+    /** 真正的授权检查（AppOps），而不是「服务是否存在」 */
+    fun hasPermission(): Boolean = UsageAccess.isGranted(context)
 
     /** 拉取 [fromTs, now] 区间内的事件；[fromTs] 为 0 时回退查最近 24h */
     fun readEvents(fromTs: Long): List<UsageEvent> {
