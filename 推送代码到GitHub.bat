@@ -1,21 +1,20 @@
 @echo off
-chcp 65001 >nul 2>&1
 title Margin - Push to GitHub
 cd /d "%~dp0"
 echo.
 echo   ==========================================
-echo     Marginã€Œç•™ç™½ã€ - æ¨é€åˆ° GitHub
+echo     Margin¡¸Áô°×¡¹ - ÍÆËÍµ½ GitHub
 echo   ==========================================
 echo.
-echo   ä»¤ç‰Œåªåœ¨éœ€è¦æ—¶ç”Ÿæˆä¸€æ¬¡ï¼š
+echo   ÁîÅÆÖ»ÔÚĞèÒªÊ±Éú³ÉÒ»´Î£º
 echo      GitHub - Settings - Developer settings - Personal access tokens
-echo        æ–¹å¼ Aï¼ˆæ¨èï¼Œç»†ç²’åº¦ï¼‰ï¼šTokens (fine-grained) - Generate new token
-echo          Repository access: Only select repositories - å‹¾é€‰ Margin
+echo        ·½Ê½ A£¨ÍÆ¼ö£¬Ï¸Á£¶È£©£ºTokens (fine-grained) - Generate new token
+echo          Repository access: Only select repositories - ¹´Ñ¡ Margin
 echo          Permissions - Repository permissions - Contents: Read and write
-echo        æ–¹å¼ Bï¼ˆç»å…¸ï¼‰ï¼šTokens (classic) - å‹¾é€‰ repo å’Œ workflow
+echo        ·½Ê½ B£¨¾­µä£©£ºTokens (classic) - ¹´Ñ¡ repo ºÍ workflow
 echo.
-echo   æ¥ä¸‹æ¥ä¼šæç¤ºç²˜è´´ä»¤ç‰Œï¼šCtrl+V æˆ–å³é”®ç²˜è´´ï¼Œç„¶åå›è½¦ã€‚
-echo   è¾“å…¥è¿‡ç¨‹ä¸­ä¸æ˜¾ç¤ºä»»ä½•å­—ç¬¦ï¼Œè¿™æ˜¯æ­£å¸¸çš„ã€‚
+echo   ½ÓÏÂÀ´»áÌáÊ¾Õ³ÌùÁîÅÆ£ºCtrl+V »òÓÒ¼üÕ³Ìù£¬È»ºó»Ø³µ¡£
+echo   ÊäÈë¹ı³ÌÖĞ²»ÏÔÊ¾ÈÎºÎ×Ö·û£¬ÕâÊÇÕı³£µÄ¡£
 echo.
 
 powershell -NoProfile -ExecutionPolicy Bypass -File "tools\push-to-github.ps1"
@@ -27,7 +26,7 @@ exit /b 0
 
 :failed
 echo.
-echo   [å·²åœæ­¢] æŒ‰ä¸Šé¢çš„æç¤ºå¤„ç†åï¼Œé‡æ–°åŒå‡»æœ¬æ–‡ä»¶ã€‚
+echo   [ÒÑÍ£Ö¹] °´ÉÏÃæµÄÌáÊ¾´¦Àíºó£¬ÖØĞÂË«»÷±¾ÎÄ¼ş¡£
 echo.
 pause
 exit /b 1

@@ -1,7 +1,12 @@
-﻿# Margin「留白」· 读取剪贴板里的令牌，推送代码并同步 GitHub Release
+﻿# Margin「留白」· 粘贴令牌，推送代码并同步 GitHub Release
 # 由「推送代码到GitHub.bat」调用；也可在终端直接运行本脚本
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
+
+# git 输出是 UTF-8，控制台默认可能是 GBK：统一成 UTF-8，提交信息才不会乱码
+$__origEncoding = [Console]::OutputEncoding
+try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
+try { $OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
 
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
@@ -11,11 +16,47 @@ $repo = 'Margin'
 $branch = 'main'
 $cleanRemote = "https://github.com/$owner/$repo.git"
 
+function Restore-Encoding {
+    try { [Console]::OutputEncoding = $__origEncoding } catch { }
+}
+
 function Fail($msg) {
     Write-Host ""
     Write-Host "  [失败] $msg" -ForegroundColor Red
+    Restore-Encoding
     exit 1
 }
+
+
+# ---------- 0. 定位 git（本机可能只有便携版） ----------
+function Resolve-Git {
+    $cmd = Get-Command git -ErrorAction SilentlyContinue
+    if ($cmd) { return $cmd.Source }
+
+    $cands = @(
+        "$env:ProgramFiles\Git\cmd\git.exe",
+        "${env:ProgramFiles(x86)}\Git\cmd\git.exe",
+        "$env:LOCALAPPDATA\Programs\Git\cmd\git.exe"
+    )
+    foreach ($c in $cands) { if (Test-Path $c) { return $c } }
+
+    # 兜底：WorkBuddy 自带的便携版（本机唯一可用的 git）
+    $base = Join-Path $env:USERPROFILE '.workbuddy\binaries\PortableGit\versions'
+    if (Test-Path $base) {
+        $found = Get-ChildItem $base -Directory -ErrorAction SilentlyContinue |
+            Sort-Object Name -Descending |
+            ForEach-Object { Join-Path $_.FullName 'cmd\git.exe' } |
+            Where-Object { Test-Path $_ } |
+            Select-Object -First 1
+        if ($found) { return $found }
+    }
+    return $null
+}
+
+$git = Resolve-Git
+if (-not $git) { Fail "没有找到 git。请安装 Git for Windows（https://git-scm.com/download/win）后重新运行。" }
+Write-Host "  git: $git" -ForegroundColor DarkGray
+
 
 # ---------- 1. 输入令牌 ----------
 Write-Host "  请粘贴 GitHub 令牌（粘贴后回车，输入过程不显示）" -ForegroundColor Cyan
@@ -41,9 +82,11 @@ $masked = $token.Substring(0, [Math]::Min(11, $token.Length)) + '...'
 Write-Host "  已接收令牌: $masked" -ForegroundColor DarkGray
 
 # ---------- 2. 待推送内容 ----------
-git fetch origin $branch 2>$null | Out-Null
-$pending = @(git log --oneline "origin/$branch..HEAD" 2>$null)
-if ($LASTEXITCODE -ne 0 -or $pending.Count -eq 0) {
+# fetch 失败（离线/代理）不应中断流程，推送阶段会再试
+try { & $git fetch origin $branch 2>$null | Out-Null } catch { }
+$pending = @()
+try { $pending = @(& $git log --oneline "origin/$branch..HEAD" 2>$null) } catch { }
+if (-not $pending -or $pending.Count -eq 0) {
     Write-Host "  没有新的提交需要推送，仍会同步 Release。" -ForegroundColor Yellow
 } else {
     Write-Host "  待推送提交：" -ForegroundColor Cyan
@@ -55,20 +98,20 @@ $pushOk = $false
 for ($i = 1; $i -le 4; $i++) {
     $url = "https://${owner}:$token@github.com/$owner/$repo.git"
     if ($i -le 2) {
-        git push $url $branch 2>&1 | ForEach-Object { Write-Host "    $_" }
+        & $git push $url $branch 2>&1 | ForEach-Object { Write-Host "    $_" }
     } else {
         $env:HTTP_PROXY = ''
         $env:HTTPS_PROXY = ''
         $env:http_proxy = ''
         $env:https_proxy = ''
-        git push $url $branch 2>&1 | ForEach-Object { Write-Host "    $_" }
+        & $git push $url $branch 2>&1 | ForEach-Object { Write-Host "    $_" }
     }
     if ($LASTEXITCODE -eq 0) { $pushOk = $true; break }
-    git remote set-url origin $cleanRemote 2>$null
+    try { & $git remote set-url origin $cleanRemote 2>$null } catch { }
     Write-Host "    第 $i 次未成功，重试..." -ForegroundColor DarkYellow
     Start-Sleep -Seconds 5
 }
-git remote set-url origin $cleanRemote 2>$null
+try { & $git remote set-url origin $cleanRemote 2>$null } catch { }
 
 if (-not $pushOk) { Fail "推送失败：请检查网络（GitHub 是否可达）与令牌权限（Contents: Read and write）" }
 Write-Host "  [OK] 代码已推送" -ForegroundColor Green
@@ -142,4 +185,5 @@ if ($hasAsset) {
 
 Write-Host ""
 Write-Host "  完成：https://github.com/$owner/$repo/releases/tag/$tag" -ForegroundColor Green
+Restore-Encoding
 exit 0
