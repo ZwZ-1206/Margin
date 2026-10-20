@@ -27,6 +27,28 @@ function Fail($msg) {
     exit 1
 }
 
+# 原生命令的 stderr 在 Stop 模式下会被当成异常抛出，
+# 统一用这个包装：收集输出、返回退出码，不抛异常
+function Invoke-Git {
+    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArgs)
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $lines = & $git @GitArgs 2>&1
+        return [pscustomobject]@{ Code = $LASTEXITCODE; Lines = @($lines) }
+    } finally {
+        $ErrorActionPreference = $prev
+    }
+}
+
+# 任何未捕获异常也要把控制台编码还原，否则 .bat 后续中文会乱码
+trap {
+    Write-Host ""
+    Write-Host "  [异常] $($_.Exception.Message)" -ForegroundColor Red
+    Restore-Encoding
+    exit 1
+}
+
 
 # ---------- 0. 定位 git（本机可能只有便携版） ----------
 function Resolve-Git {
@@ -59,6 +81,9 @@ Write-Host "  git: $git" -ForegroundColor DarkGray
 
 
 # ---------- 1. 输入令牌 ----------
+# 支持环境变量 MARGIN_GH_TOKEN（自动化/无人值守用）；没有才提示手工粘贴
+$token = $env:MARGIN_GH_TOKEN
+if (-not $token) {
 Write-Host "  请粘贴 GitHub 令牌（粘贴后回车，输入过程不显示）" -ForegroundColor Cyan
 $token = ''
 while ($true) {
@@ -78,14 +103,21 @@ while ($true) {
     Write-Host "  格式不对（应以 ghp_ 或 github_pat_ 开头），请重新粘贴。" -ForegroundColor Yellow
 }
 
+$token = $token.Trim() -replace '\s', ''
+if (-not ($token -match '^(ghp_|github_pat_)')) { Fail "令牌格式不对（应以 ghp_ 或 github_pat_ 开头）" }
+} else {
+    $token = $token.Trim() -replace '\s', ''
+    if (-not ($token -match '^(ghp_|github_pat_)')) { Fail "环境变量 MARGIN_GH_TOKEN 的格式不对" }
+}
+
 $masked = $token.Substring(0, [Math]::Min(11, $token.Length)) + '...'
 Write-Host "  已接收令牌: $masked" -ForegroundColor DarkGray
 
 # ---------- 2. 待推送内容 ----------
 # fetch 失败（离线/代理）不应中断流程，推送阶段会再试
-try { & $git fetch origin $branch 2>$null | Out-Null } catch { }
+Invoke-Git fetch origin $branch | Out-Null
 $pending = @()
-try { $pending = @(& $git log --oneline "origin/$branch..HEAD" 2>$null) } catch { }
+$pending = @((Invoke-Git log --oneline "origin/$branch..HEAD").Lines)
 if (-not $pending -or $pending.Count -eq 0) {
     Write-Host "  没有新的提交需要推送，仍会同步 Release。" -ForegroundColor Yellow
 } else {
@@ -97,21 +129,21 @@ if (-not $pending -or $pending.Count -eq 0) {
 $pushOk = $false
 for ($i = 1; $i -le 4; $i++) {
     $url = "https://${owner}:$token@github.com/$owner/$repo.git"
-    if ($i -le 2) {
-        & $git push $url $branch 2>&1 | ForEach-Object { Write-Host "    $_" }
-    } else {
+    if ($i -gt 2) {
+        # 后两次尝试绕开代理直连
         $env:HTTP_PROXY = ''
         $env:HTTPS_PROXY = ''
         $env:http_proxy = ''
         $env:https_proxy = ''
-        & $git push $url $branch 2>&1 | ForEach-Object { Write-Host "    $_" }
     }
-    if ($LASTEXITCODE -eq 0) { $pushOk = $true; break }
-    try { & $git remote set-url origin $cleanRemote 2>$null } catch { }
+    $result = Invoke-Git push $url $branch
+    $result.Lines | ForEach-Object { Write-Host "    $_" }
+    if ($result.Code -eq 0) { $pushOk = $true; break }
+    Invoke-Git remote set-url origin $cleanRemote | Out-Null
     Write-Host "    第 $i 次未成功，重试..." -ForegroundColor DarkYellow
     Start-Sleep -Seconds 5
 }
-try { & $git remote set-url origin $cleanRemote 2>$null } catch { }
+Invoke-Git remote set-url origin $cleanRemote | Out-Null
 
 if (-not $pushOk) { Fail "推送失败：请检查网络（GitHub 是否可达）与令牌权限（Contents: Read and write）" }
 Write-Host "  [OK] 代码已推送" -ForegroundColor Green
