@@ -2,141 +2,287 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8" />
-<title>Margin posters</title>
+<title>Margin posters v2</title>
 <style>
-  @font-face{font-family:"Serif M";src:local("Georgia"),local("Times New Roman")}
   *{box-sizing:border-box;-webkit-font-smoothing:antialiased}
-  html,body{margin:0;background:#dcdcdc}
-  body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif}
-  .poster{
-    position:relative;width:1080px;overflow:hidden;background:var(--bg);
-    color:#1B1915;display:none;
-  }
+  html,body{margin:0;background:#d8d8d8}
+  body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:#1B1915}
+
+  .poster{position:relative;width:1080px;overflow:hidden;background:var(--bg);display:none}
   .poster.show{display:block}
+  .p9x16{height:1920px}
+  .p3x4{height:1440px}
 
-  /* ---------- 9:16 ---------- */
-  .p9x16{--H:1920px;--title:146px;--phoneW:458px;--phoneTop:566px;--notesTop:648px;
-         --noteW:255px;--noteB:30px;--noteP:27px;height:var(--H)}
-  /* ---------- 3:4 ---------- */
-  .p3x4{--H:1440px;--title:104px;--phoneW:378px;--phoneTop:436px;--notesTop:512px;
-        --noteW:246px;--noteB:26px;--noteP:24px;height:var(--H)}
+  .deco{position:absolute;border-radius:50%;opacity:.55;pointer-events:none}
+  .d1{width:560px;height:560px;right:-210px;top:-240px;background:radial-gradient(circle at 35% 35%,var(--acs),transparent 68%)}
+  .d2{width:460px;height:460px;left:-190px;bottom:180px;background:radial-gradient(circle at 60% 40%,var(--acs),transparent 68%)}
+  .d3{width:320px;height:320px;right:-80px;bottom:-70px;background:radial-gradient(circle at 40% 60%,var(--acs),transparent 68%)}
 
-  .deco{position:absolute;border-radius:50%;opacity:.5}
-  .d1{width:520px;height:520px;right:-190px;top:-220px;background:radial-gradient(circle at 30% 30%,var(--acs),transparent 70%)}
-  .d2{width:420px;height:420px;left:-170px;bottom:210px;background:radial-gradient(circle at 60% 40%,var(--acs),transparent 70%)}
-  .d3{width:300px;height:300px;right:-90px;bottom:-60px;background:radial-gradient(circle at 40% 60%,var(--acs),transparent 70%)}
+  .brand{position:absolute;display:flex;align-items:center;gap:16px;z-index:6}
+  .appicon{border-radius:22%;box-shadow:0 10px 24px rgba(27,25,21,.20);display:block}
+  .brand .name{font-size:38px;font-weight:700;letter-spacing:1px;white-space:nowrap}
+  .brand .name small{font-size:22px;font-weight:600;color:#6E675C;margin-left:8px;letter-spacing:2px}
+  .tag{position:absolute;right:56px;top:58px;font-size:25px;font-weight:600;color:var(--ac);
+       border:2px solid var(--ac);border-radius:999px;padding:8px 22px;background:rgba(255,255,255,.55);z-index:6}
 
-  .brand{position:absolute;left:56px;top:48px;display:flex;align-items:center;gap:16px;z-index:3}
-  .mark{width:64px;height:64px;border-radius:19px;background:var(--ac);color:#fff;
-        display:flex;align-items:center;justify-content:center;font-family:"Serif M",Georgia,serif;
-        font-size:34px;font-weight:700;letter-spacing:-1px;box-shadow:0 8px 20px rgba(27,25,21,.16)}
-  .brand .name{font-size:40px;font-weight:700;letter-spacing:1px}
-  .brand .name small{font-size:24px;font-weight:600;color:#6E675C;margin-left:8px;letter-spacing:2px}
-
-  .tag{position:absolute;right:56px;top:58px;font-size:26px;font-weight:600;color:var(--ac);
-       border:2px solid var(--ac);border-radius:999px;padding:8px 22px;background:rgba(255,255,255,.6);z-index:3}
-
-  .eyebrow{position:absolute;left:56px;top:150px;height:62px;border-radius:31px;background:var(--ac);
-           color:#fff;font-size:30px;font-weight:700;display:flex;align-items:center;padding:0 34px;
-           letter-spacing:4px;z-index:3}
-  .p3x4 .eyebrow{top:132px;height:54px;font-size:26px;padding:0 28px}
-
-  .title{position:absolute;left:56px;top:240px;width:968px;z-index:3}
-  .p3x4 .title{top:206px;width:968px}
-  .title .line{font-size:var(--title);font-weight:700;line-height:1.1;white-space:nowrap}
+  .eyebrow{position:absolute;border-radius:999px;background:var(--ac);color:#fff;font-weight:700;
+           display:inline-flex;align-items:center;letter-spacing:4px;z-index:6}
+  .title{position:absolute;z-index:6;font-weight:700;line-height:1.1;white-space:nowrap}
   .title .hl{color:var(--ac)}
+  .lede{position:absolute;z-index:6;font-weight:500;color:#4F4A3E;line-height:1.5}
 
-  .phone{position:absolute;left:50%;transform:translateX(-50%);top:var(--phoneTop);
-         width:var(--phoneW);border-radius:60px;background:#14171C;padding:10px;
-         box-shadow:0 34px 74px rgba(27,25,21,.26);z-index:2}
-  .screen{border-radius:50px;overflow:hidden;background:#F8F6F1;display:block}
-  .shot{display:block;width:100%;height:auto}
+  .phone{position:absolute;border-radius:56px;background:#14171C;padding:10px;
+         box-shadow:0 34px 74px rgba(27,25,21,.28);z-index:4}
+  .phone .screen{border-radius:48px;overflow:hidden;display:block;background:#F8F6F1}
+  .phone img{display:block;width:100%;height:auto}
 
-  .notes{position:absolute;left:34px;top:var(--notesTop);width:var(--noteW);display:flex;
-         flex-direction:column;gap:22px;z-index:3}
-  .note{background:#fff;border-radius:24px;padding:18px 20px;box-shadow:0 10px 26px rgba(27,25,21,.10)}
-  .note b{font-size:var(--noteB);font-weight:700;display:flex;align-items:center;gap:10px;line-height:1.25}
-  .note b i{width:14px;height:14px;border-radius:50%;background:var(--ac);flex:none}
-  .note p{font-size:var(--noteP);color:#5A5648;margin:6px 0 0;line-height:1.35}
-  .note--float{position:absolute;right:34px;top:calc(var(--notesTop) + 330px);width:var(--noteW);z-index:3}
+  .note{position:absolute;background:#fff;border-radius:22px;padding:18px 20px;
+        box-shadow:0 10px 26px rgba(27,25,21,.10);z-index:6}
+  .note b{font-size:29px;font-weight:700;display:flex;align-items:center;gap:10px;line-height:1.25}
+  .note b i{width:13px;height:13px;border-radius:50%;background:var(--ac);flex:none}
+  .note p{font-size:26px;color:#585243;margin:6px 0 0;line-height:1.35}
 
-  .chips{position:absolute;left:56px;right:56px;bottom:270px;display:flex;justify-content:center;gap:18px;z-index:3}
-  .chips span{height:58px;border-radius:999px;background:#fff;display:flex;align-items:center;padding:0 26px;
-              font-size:27px;font-weight:600;color:#3F3B31;box-shadow:0 6px 16px rgba(27,25,21,.08)}
+  .bignum{position:absolute;z-index:6}
+  .bignum .n{font-weight:700;color:var(--ac);line-height:1;letter-spacing:-2px}
+  .bignum .c{color:#6E675C;margin-top:10px}
 
-  .cta{position:absolute;left:56px;right:56px;bottom:66px;height:128px;border-radius:28px;background:var(--ac);
-       display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:3;
-       box-shadow:0 16px 34px rgba(27,25,21,.20)}
-  .cta b{font-size:40px;font-weight:700;color:#fff;letter-spacing:2px}
-  .cta span{font-size:27px;color:rgba(255,255,255,.9)}
-  .p3x4 .cta{height:104px;bottom:44px;border-radius:24px}
-  .p3x4 .cta b{font-size:34px}
-  .p3x4 .cta span{font-size:24px}
-  /* 3:4 没有独立 chips 行，信任点并进 CTA 副行 */
-  .p3x4 .chips{display:none}
+  .chips{position:absolute;display:flex;justify-content:center;gap:16px;z-index:6}
+  .chips span{height:56px;border-radius:999px;background:#fff;display:flex;align-items:center;padding:0 24px;
+              font-size:26px;font-weight:600;color:#3F3B31;box-shadow:0 6px 16px rgba(27,25,21,.08)}
+
+  .cta{position:absolute;border-radius:26px;background:var(--ac);display:flex;flex-direction:column;
+       align-items:center;justify-content:center;gap:5px;z-index:6;box-shadow:0 16px 34px rgba(27,25,21,.22)}
+  .cta b{color:#fff;font-weight:700;letter-spacing:1px}
+  .cta span{color:rgba(255,255,255,.9)}
+
+  /* ================= A 经典居中 ================= */
+  .layout-a .brand{left:56px;top:48px}
+  .layout-a .brand .appicon{width:68px;height:68px}
+  .layout-a .eyebrow{left:56px;top:150px;height:60px;padding:0 32px;font-size:29px}
+  .layout-a .title{left:56px;top:238px;width:968px;font-size:146px}
+  .layout-a .phone{left:50%;transform:translateX(-50%);top:566px;width:458px}
+  .layout-a .note-1{left:34px;top:648px;width:255px}
+  .layout-a .note-2{left:34px;top:830px;width:255px}
+  .layout-a .note--float{right:34px;top:980px;width:255px}
+  .layout-a .chips{left:0;right:0;bottom:268px}
+  .layout-a .cta{left:56px;right:56px;bottom:66px;height:128px}
+  .layout-a .cta b{font-size:40px}
+  .layout-a .cta span{font-size:26px}
+  .p3x4.layout-a .brand{top:44px}
+  .p3x4.layout-a .brand .appicon{width:58px;height:58px}
+  .p3x4.layout-a .eyebrow{top:132px;height:52px;font-size:25px}
+  .p3x4.layout-a .title{top:204px;font-size:104px}
+  .p3x4.layout-a .phone{top:432px;width:378px}
+  .p3x4.layout-a .note-1{left:30px;top:500px;width:238px}
+  .p3x4.layout-a .note-2{left:30px;top:664px;width:238px}
+  .p3x4.layout-a .note--float{right:30px;top:760px;width:238px}
+  .p3x4.layout-a .note b{font-size:26px}
+  .p3x4.layout-a .note p{font-size:23px}
+  .p3x4.layout-a .chips{display:none}
+  .p3x4.layout-a .cta{left:56px;right:56px;bottom:44px;height:104px}
+  .p3x4.layout-a .cta b{font-size:34px}
+  .p3x4.layout-a .cta span{font-size:23px}
+
+  /* ================= B 大字居中 · 手机沉底 ================= */
+  .layout-b .brand{left:50%;transform:translateX(-50%);top:56px}
+  .layout-b .brand .appicon{width:64px;height:64px}
+  .layout-b .tag{display:none}
+  .layout-b .eyebrow{left:50%;transform:translateX(-50%);top:168px;height:58px;padding:0 30px;font-size:28px}
+  .layout-b .title{left:0;right:0;top:252px;text-align:center;font-size:150px;white-space:normal}
+  .layout-b .lede{left:80px;right:80px;top:600px;text-align:center;font-size:32px}
+  .layout-b .phone{left:50%;transform:translateX(-50%);top:700px;width:478px}
+  .layout-b .note{display:none}
+  .layout-b .chips{display:none}
+  .layout-b .cta{left:50%;transform:translateX(-50%);bottom:58px;width:640px;height:112px;border-radius:999px}
+  .layout-b .cta b{font-size:38px}
+  .layout-b .cta span{font-size:25px}
+  .p3x4.layout-b .brand{top:40px}
+  .p3x4.layout-b .brand .appicon{width:54px;height:54px}
+  .p3x4.layout-b .eyebrow{top:120px;height:50px;font-size:24px}
+  .p3x4.layout-b .title{top:186px;font-size:112px}
+  .p3x4.layout-b .lede{top:440px;font-size:25px}
+  .p3x4.layout-b .phone{top:510px;width:340px}
+  .p3x4.layout-b .cta{bottom:40px;width:560px;height:92px}
+  .p3x4.layout-b .cta b{font-size:32px}
+  .p3x4.layout-b .cta span{font-size:22px}
+
+  /* ================= C 左右分栏 ================= */
+  .layout-c .brand{left:56px;top:48px}
+  .layout-c .brand .appicon{width:60px;height:60px}
+  .layout-c .brand .name{font-size:32px}
+  .layout-c .brand .name small{display:none}
+  .layout-c .eyebrow{left:56px;top:150px;height:56px;padding:0 28px;font-size:27px}
+  .layout-c .title{left:56px;top:244px;width:412px;font-size:100px;white-space:normal}
+  .layout-c .phone{left:474px;top:420px;width:552px}
+  .layout-c .note-1{left:56px;top:560px;width:396px}
+  .layout-c .note-2{left:56px;top:742px;width:396px}
+  .layout-c .note--float{display:none}
+  .layout-c .chips{display:none}
+  .layout-c .cta{left:56px;bottom:96px;width:396px;height:120px}
+  .layout-c .cta b{font-size:34px}
+  .layout-c .cta span{font-size:23px}
+  .p3x4.layout-c .brand{top:40px}
+  .p3x4.layout-c .brand .appicon{width:52px;height:52px}
+  .p3x4.layout-c .eyebrow{top:118px;height:48px;font-size:23px}
+  .p3x4.layout-c .title{top:196px;width:360px;font-size:76px}
+  .p3x4.layout-c .phone{left:424px;top:306px;width:420px}
+  .p3x4.layout-c .note-1{left:40px;top:452px;width:352px}
+  .p3x4.layout-c .note-2{left:40px;top:614px;width:352px}
+  .p3x4.layout-c .note b{font-size:26px}
+  .p3x4.layout-c .note p{font-size:23px}
+  .p3x4.layout-c .cta{left:40px;bottom:56px;width:352px;height:100px}
+  .p3x4.layout-c .cta b{font-size:30px}
+  .p3x4.layout-c .cta span{font-size:21px}
+
+  /* ================= D 横排标注 ================= */
+  .layout-d .brand{left:56px;top:48px}
+  .layout-d .brand .appicon{width:68px;height:68px}
+  .layout-d .eyebrow{left:56px;top:150px;height:60px;padding:0 32px;font-size:29px}
+  .layout-d .title{left:56px;top:236px;width:968px;font-size:134px}
+  .layout-d .phone{left:50%;transform:translateX(-50%);top:512px;width:466px}
+  .layout-d .note-1{left:56px;top:1618px;width:300px}
+  .layout-d .note-2{left:390px;top:1618px;width:300px}
+  .layout-d .note-3{right:56px;top:1618px;width:300px}
+  .layout-d .chips{display:none}
+  .layout-d .cta{left:56px;right:56px;bottom:60px;height:118px}
+  .layout-d .cta b{font-size:38px}
+  .layout-d .cta span{font-size:25px}
+  .p3x4.layout-d .brand{top:40px}
+  .p3x4.layout-d .brand .appicon{width:56px;height:56px}
+  .p3x4.layout-d .eyebrow{top:120px;height:50px;font-size:24px}
+  .p3x4.layout-d .title{top:186px;font-size:96px}
+  .p3x4.layout-d .phone{top:376px;width:352px}
+  .p3x4.layout-d .note-1{left:40px;top:1146px;width:316px}
+  .p3x4.layout-d .note-2{left:384px;top:1146px;width:316px}
+  .p3x4.layout-d .note-3{right:40px;top:1146px;width:316px}
+  .p3x4.layout-d .note b{font-size:25px}
+  .p3x4.layout-d .note p{font-size:22px}
+  .p3x4.layout-d .cta{bottom:44px;height:100px}
+  .p3x4.layout-d .cta b{font-size:32px}
+  .p3x4.layout-d .cta span{font-size:22px}
+
+  /* ================= E 大数字左 · 手机右下 ================= */
+  .layout-e .brand{left:56px;top:48px}
+  .layout-e .brand .appicon{width:60px;height:60px}
+  .layout-e .brand .name{font-size:32px}
+  .layout-e .brand .name small{display:none}
+  .layout-e .eyebrow{left:56px;top:150px;height:56px;padding:0 28px;font-size:27px}
+  .layout-e .title{left:56px;top:228px;width:600px;font-size:118px;white-space:normal}
+  .layout-e .bignum{left:56px;top:566px}
+  .layout-e .bignum .n{font-size:132px}
+  .layout-e .bignum .c{font-size:28px}
+  .layout-e .phone{right:56px;top:900px;width:392px}
+  .layout-e .note-1{left:56px;top:790px;width:430px}
+  .layout-e .note-2{left:56px;top:952px;width:430px}
+  .layout-e .note--float{display:none}
+  .layout-e .chips{display:none}
+  .layout-e .cta{left:56px;bottom:96px;width:430px;height:120px}
+  .layout-e .cta b{font-size:34px}
+  .layout-e .cta span{font-size:23px}
+  .p3x4.layout-e .brand{top:40px}
+  .p3x4.layout-e .brand .appicon{width:52px;height:52px}
+  .p3x4.layout-e .eyebrow{top:116px;height:48px;font-size:23px}
+  .p3x4.layout-e .title{top:180px;width:520px;font-size:88px}
+  .p3x4.layout-e .bignum{top:404px}
+  .p3x4.layout-e .bignum .n{font-size:100px}
+  .p3x4.layout-e .bignum .c{font-size:24px}
+  .p3x4.layout-e .phone{right:40px;top:640px;width:300px}
+  .p3x4.layout-e .note-1{left:40px;top:560px;width:360px}
+  .p3x4.layout-e .note-2{left:40px;top:706px;width:360px}
+  .p3x4.layout-e .note b{font-size:25px}
+  .p3x4.layout-e .note p{font-size:22px}
+  .p3x4.layout-e .cta{left:40px;bottom:52px;width:360px;height:100px}
+  .p3x4.layout-e .cta b{font-size:30px}
+  .p3x4.layout-e .cta span{font-size:21px}
+
+  /* ================= F 宣言居中 ================= */
+  .layout-f .brand{left:50%;transform:translateX(-50%);top:70px}
+  .layout-f .brand .appicon{width:72px;height:72px}
+  .layout-f .tag{display:none}
+  .layout-f .eyebrow{left:50%;transform:translateX(-50%);top:190px;height:56px;padding:0 30px;font-size:27px}
+  .layout-f .title{left:0;right:0;top:278px;font-size:142px;white-space:normal;text-align:center}
+  .layout-f .lede{left:86px;right:86px;top:606px;font-size:33px;text-align:center}
+  .layout-f .phone{left:50%;transform:translateX(-50%);top:860px;width:318px}
+  .layout-f .note{display:none}
+  .layout-f .chips{display:none}
+  .layout-f .cta{left:50%;transform:translateX(-50%);bottom:76px;width:700px;height:118px}
+  .layout-f .cta b{font-size:38px}
+  .layout-f .cta span{font-size:25px}
+  .p3x4.layout-f .brand{top:44px}
+  .p3x4.layout-f .brand .appicon{width:58px;height:58px}
+  .p3x4.layout-f .eyebrow{top:128px;height:48px;font-size:23px}
+  .p3x4.layout-f .title{top:196px;font-size:100px}
+  .p3x4.layout-f .lede{left:70px;right:70px;top:446px;font-size:25px}
+  .p3x4.layout-f .phone{top:600px;width:262px}
+  .p3x4.layout-f .cta{bottom:44px;width:600px;height:96px}
+  .p3x4.layout-f .cta b{font-size:32px}
+  .p3x4.layout-f .cta span{font-size:22px}
 </style>
 </head>
 <body>
 <div id="stage"></div>
-
 <script>
-const SHOTS = '../shots';
 const DATA = [
-  { n:1, shot:'shot-01.png', ac:'#0A7A61', bg:'#EAF7F2', acs:'rgba(10,122,97,.16)',
-    eyebrow:'屏幕洞察', l1:'时间都去哪了', l2:'全都看清', hl:'全都看清',
+  { n:1, layout:'a', shot:'shot-01.png', ac:'#0A7A61', bg:'#EAF7F2', acs:'rgba(10,122,97,.17)',
+    eyebrow:'屏幕洞察', l1:'时间都去哪了', l2:'全都看清',
     notes:[['日周月趋势','随时翻回去'],['双柱对比','屏幕 vs 专注']], float:['应用排行','谁最耗时间'] },
-  { n:2, shot:'shot-02.png', ac:'#E8930C', bg:'#FFF6E9', acs:'rgba(232,147,12,.16)',
-    eyebrow:'专注计时', l1:'翻开书就', l2:'想摸手机？', hl:'想摸手机？',
-    notes:[['三种模式','按需切换'],['后台计时','退出去也在走']], float:['断点续计','杀进程不丢'] },
-  { n:3, shot:'shot-03.png', ac:'#D6568A', bg:'#FCEFF4', acs:'rgba(214,86,138,.15)',
-    eyebrow:'应用限额', l1:'短视频', l2:'说停就停', hl:'说停就停',
-    notes:[['逐个设定','每个 App 单独'],['到点提醒','只提醒一次']], float:['温和干预','不是一刀切'] },
-  { n:4, shot:'shot-05.png', ac:'#3E63DD', bg:'#EEF1FC', acs:'rgba(62,99,221,.15)',
-    eyebrow:'桌面小部件', l1:'不用点开', l2:'抬眼就知道', hl:'抬眼就知道',
-    notes:[['两种尺寸','2×2 与 4×1'],['自动刷新','数据总是新的']], float:['零打扰','不推送不弹窗'] },
-  { n:5, shot:'shot-04.png', ac:'#7C6BD9', bg:'#F2EFFC', acs:'rgba(124,107,217,.15)',
-    eyebrow:'每周回顾', l1:'一周结束', l2:'看清节奏', hl:'看清节奏',
-    notes:[['双柱对比','屏幕与专注'],['趋势变化','比上周强吗']], float:['应用排行','时间花在哪'] },
-  { n:6, shot:'shot-06.png', ac:'#08624E', bg:'#E9F1EE', acs:'rgba(8,98,78,.15)',
-    eyebrow:'隐私与免费', l1:'没有账号', l2:'数据在本地', hl:'数据在本地',
-    notes:[['无需注册','打开就能用'],['零广告','无追踪 SDK']], float:['一键清空','随时删数据'] },
+
+  { n:2, layout:'b', shot:'shot-02.png', ac:'#E8930C', bg:'#FFF6E9', acs:'rgba(232,147,12,.18)',
+    eyebrow:'专注计时', l1:'翻开书就', l2:'想摸手机？', lede:'25 分钟，只做一件事。' },
+
+  { n:3, layout:'c', shot:'shot-03.png', ac:'#D6568A', bg:'#FCEFF4', acs:'rgba(214,86,138,.16)',
+    eyebrow:'应用限额', l1:'短视频', l2:'说停就停',
+    notes:[['逐个设定','每个 App 单独'],['到点提醒','只提醒一次']] },
+
+  { n:4, layout:'d', shot:'shot-05.png', ac:'#3E63DD', bg:'#EEF1FC', acs:'rgba(62,99,221,.16)',
+    eyebrow:'桌面小部件', l1:'不用点开', l2:'抬眼就知道',
+    notes:[['两种尺寸','2×2 与 4×1'],['自动刷新','数据总是新的'],['零打扰','不推送不弹窗']] },
+
+  { n:5, layout:'e', shot:'shot-04.png', ac:'#7C6BD9', bg:'#F2EFFC', acs:'rgba(124,107,217,.16)',
+    eyebrow:'每周回顾', l1:'一周结束', l2:'看清节奏',
+    bignum:'4 小时 18 分', bigcap:'本周专注累计（相当于两集剧）',
+    notes:[['双柱对比','屏幕与专注'],['趋势变化','比上周强吗']] },
+
+  { n:6, layout:'f', shot:'shot-06.png', ac:'#08624E', bg:'#E9F1EE', acs:'rgba(8,98,78,.16)',
+    eyebrow:'隐私与免费', l1:'没有账号', l2:'数据在本地',
+    lede:'不注册、不上传、不追踪。所有记录只存在你的手机里。' },
 ];
 
 const q = new URLSearchParams(location.search);
 const wantP = q.get('p') ? +q.get('p') : null;
-const size = q.get('size') === '34' ? 'p3x4' : 'p9x16';
+const sizeCls = q.get('size') === '34' ? 'p3x4' : 'p9x16';
 
-const stage = document.getElementById('stage');
-stage.innerHTML = DATA.map(d => `
-  <div class="poster ${size} ${(!wantP || wantP === d.n) ? 'show' : ''}"
-       id="p${d.n}" style="--ac:${d.ac};--bg:${d.bg};--acs:${d.acs}">
+document.getElementById('stage').innerHTML = DATA.map(d => {
+  const notes = (d.notes || []).map(([b, p], i) => `<div class="note note-${i + 1}"><b><i></i>${b}</b><p>${p}</p></div>`).join('');
+  const float = d.float ? `<div class="note note--float"><b><i></i>${d.float[0]}</b><p>${d.float[1]}</p></div>` : '';
+  const bignum = d.bignum ? `<div class="bignum"><div class="n">${d.bignum}</div><div class="c">${d.bigcap}</div></div>` : '';
+  const lede = d.lede ? `<div class="lede">${d.lede}</div>` : '';
+  const show = (!wantP || wantP === d.n) ? 'show' : '';
+  return `
+  <div class="poster ${sizeCls} layout-${d.layout} ${show}" id="p${d.n}"
+       style="--ac:${d.ac};--bg:${d.bg};--acs:${d.acs}">
     <div class="deco d1"></div><div class="deco d2"></div><div class="deco d3"></div>
 
     <div class="brand">
-      <span class="mark">M.</span>
+      <img class="appicon" src="assets/icon-256.png" alt="留白">
       <span class="name">「留白」<small>Margin</small></span>
     </div>
     <div class="tag">#大学生的时间管理</div>
 
     <div class="eyebrow">${d.eyebrow}</div>
-    <div class="title">
-      <div class="line">${d.l1}</div>
-      <div class="line"><span class="hl">${d.l2}</span></div>
-    </div>
+    <div class="title"><div>${d.l1}</div><div><span class="hl">${d.l2}</span></div></div>
+    ${lede}
+    ${bignum}
 
-    <div class="phone"><div class="screen">
-      <img class="shot" src="${SHOTS}/${d.shot}" alt="${d.eyebrow}">
-    </div></div>
+    <div class="phone"><div class="screen"><img src="shots/${d.shot}" alt="${d.eyebrow}"></div></div>
 
-    <div class="notes">
-      ${d.notes.map(([b,p]) => `<div class="note"><b><i></i>${b}</b><p>${p}</p></div>`).join('')}
-    </div>
-    <div class="note note--float"><b><i></i>${d.float[0]}</b><p>${d.float[1]}</p></div>
+    ${notes}
+    ${float}
 
     <div class="chips"><span>完全免费</span><span>无广告</span><span>数据只存本机</span></div>
     <div class="cta"><b>下载「留白」</b><span>写给总在刷手机的大学生</span></div>
-  </div>
-`).join('');
+  </div>`;
+}).join('');
 </script>
 </body>
 </html>
