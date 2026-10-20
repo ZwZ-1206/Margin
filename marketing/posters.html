@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>Margin posters</title>
+<style>
+  @font-face{font-family:"Serif M";src:local("Georgia"),local("Times New Roman")}
+  *{box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  html,body{margin:0;background:#dcdcdc}
+  body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+  .poster{
+    position:relative;width:1080px;overflow:hidden;background:var(--bg);
+    color:#1B1915;display:none;
+  }
+  .poster.show{display:block}
+
+  /* ---------- 9:16 ---------- */
+  .p9x16{--H:1920px;--title:146px;--phoneW:458px;--phoneTop:566px;--notesTop:648px;
+         --noteW:255px;--noteB:30px;--noteP:27px;height:var(--H)}
+  /* ---------- 3:4 ---------- */
+  .p3x4{--H:1440px;--title:104px;--phoneW:378px;--phoneTop:436px;--notesTop:512px;
+        --noteW:246px;--noteB:26px;--noteP:24px;height:var(--H)}
+
+  .deco{position:absolute;border-radius:50%;opacity:.5}
+  .d1{width:520px;height:520px;right:-190px;top:-220px;background:radial-gradient(circle at 30% 30%,var(--acs),transparent 70%)}
+  .d2{width:420px;height:420px;left:-170px;bottom:210px;background:radial-gradient(circle at 60% 40%,var(--acs),transparent 70%)}
+  .d3{width:300px;height:300px;right:-90px;bottom:-60px;background:radial-gradient(circle at 40% 60%,var(--acs),transparent 70%)}
+
+  .brand{position:absolute;left:56px;top:48px;display:flex;align-items:center;gap:16px;z-index:3}
+  .mark{width:64px;height:64px;border-radius:19px;background:var(--ac);color:#fff;
+        display:flex;align-items:center;justify-content:center;font-family:"Serif M",Georgia,serif;
+        font-size:34px;font-weight:700;letter-spacing:-1px;box-shadow:0 8px 20px rgba(27,25,21,.16)}
+  .brand .name{font-size:40px;font-weight:700;letter-spacing:1px}
+  .brand .name small{font-size:24px;font-weight:600;color:#6E675C;margin-left:8px;letter-spacing:2px}
+
+  .tag{position:absolute;right:56px;top:58px;font-size:26px;font-weight:600;color:var(--ac);
+       border:2px solid var(--ac);border-radius:999px;padding:8px 22px;background:rgba(255,255,255,.6);z-index:3}
+
+  .eyebrow{position:absolute;left:56px;top:150px;height:62px;border-radius:31px;background:var(--ac);
+           color:#fff;font-size:30px;font-weight:700;display:flex;align-items:center;padding:0 34px;
+           letter-spacing:4px;z-index:3}
+  .p3x4 .eyebrow{top:132px;height:54px;font-size:26px;padding:0 28px}
+
+  .title{position:absolute;left:56px;top:240px;width:968px;z-index:3}
+  .p3x4 .title{top:206px;width:968px}
+  .title .line{font-size:var(--title);font-weight:700;line-height:1.1;white-space:nowrap}
+  .title .hl{color:var(--ac)}
+
+  .phone{position:absolute;left:50%;transform:translateX(-50%);top:var(--phoneTop);
+         width:var(--phoneW);border-radius:60px;background:#14171C;padding:10px;
+         box-shadow:0 34px 74px rgba(27,25,21,.26);z-index:2}
+  .screen{border-radius:50px;overflow:hidden;background:#F8F6F1;display:block}
+  .shot{display:block;width:100%;height:auto}
+
+  .notes{position:absolute;left:34px;top:var(--notesTop);width:var(--noteW);display:flex;
+         flex-direction:column;gap:22px;z-index:3}
+  .note{background:#fff;border-radius:24px;padding:18px 20px;box-shadow:0 10px 26px rgba(27,25,21,.10)}
+  .note b{font-size:var(--noteB);font-weight:700;display:flex;align-items:center;gap:10px;line-height:1.25}
+  .note b i{width:14px;height:14px;border-radius:50%;background:var(--ac);flex:none}
+  .note p{font-size:var(--noteP);color:#5A5648;margin:6px 0 0;line-height:1.35}
+  .note--float{position:absolute;right:34px;top:calc(var(--notesTop) + 330px);width:var(--noteW);z-index:3}
+
+  .chips{position:absolute;left:56px;right:56px;bottom:270px;display:flex;justify-content:center;gap:18px;z-index:3}
+  .chips span{height:58px;border-radius:999px;background:#fff;display:flex;align-items:center;padding:0 26px;
+              font-size:27px;font-weight:600;color:#3F3B31;box-shadow:0 6px 16px rgba(27,25,21,.08)}
+
+  .cta{position:absolute;left:56px;right:56px;bottom:66px;height:128px;border-radius:28px;background:var(--ac);
+       display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:3;
+       box-shadow:0 16px 34px rgba(27,25,21,.20)}
+  .cta b{font-size:40px;font-weight:700;color:#fff;letter-spacing:2px}
+  .cta span{font-size:27px;color:rgba(255,255,255,.9)}
+  .p3x4 .cta{height:104px;bottom:44px;border-radius:24px}
+  .p3x4 .cta b{font-size:34px}
+  .p3x4 .cta span{font-size:24px}
+  /* 3:4 没有独立 chips 行，信任点并进 CTA 副行 */
+  .p3x4 .chips{display:none}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+
+<script>
+const SHOTS = '../shots';
+const DATA = [
+  { n:1, shot:'shot-01.png', ac:'#0A7A61', bg:'#EAF7F2', acs:'rgba(10,122,97,.16)',
+    eyebrow:'屏幕洞察', l1:'时间都去哪了', l2:'全都看清', hl:'全都看清',
+    notes:[['日周月趋势','随时翻回去'],['双柱对比','屏幕 vs 专注']], float:['应用排行','谁最耗时间'] },
+  { n:2, shot:'shot-02.png', ac:'#E8930C', bg:'#FFF6E9', acs:'rgba(232,147,12,.16)',
+    eyebrow:'专注计时', l1:'翻开书就', l2:'想摸手机？', hl:'想摸手机？',
+    notes:[['三种模式','按需切换'],['后台计时','退出去也在走']], float:['断点续计','杀进程不丢'] },
+  { n:3, shot:'shot-03.png', ac:'#D6568A', bg:'#FCEFF4', acs:'rgba(214,86,138,.15)',
+    eyebrow:'应用限额', l1:'短视频', l2:'说停就停', hl:'说停就停',
+    notes:[['逐个设定','每个 App 单独'],['到点提醒','只提醒一次']], float:['温和干预','不是一刀切'] },
+  { n:4, shot:'shot-05.png', ac:'#3E63DD', bg:'#EEF1FC', acs:'rgba(62,99,221,.15)',
+    eyebrow:'桌面小部件', l1:'不用点开', l2:'抬眼就知道', hl:'抬眼就知道',
+    notes:[['两种尺寸','2×2 与 4×1'],['自动刷新','数据总是新的']], float:['零打扰','不推送不弹窗'] },
+  { n:5, shot:'shot-04.png', ac:'#7C6BD9', bg:'#F2EFFC', acs:'rgba(124,107,217,.15)',
+    eyebrow:'每周回顾', l1:'一周结束', l2:'看清节奏', hl:'看清节奏',
+    notes:[['双柱对比','屏幕与专注'],['趋势变化','比上周强吗']], float:['应用排行','时间花在哪'] },
+  { n:6, shot:'shot-06.png', ac:'#08624E', bg:'#E9F1EE', acs:'rgba(8,98,78,.15)',
+    eyebrow:'隐私与免费', l1:'没有账号', l2:'数据在本地', hl:'数据在本地',
+    notes:[['无需注册','打开就能用'],['零广告','无追踪 SDK']], float:['一键清空','随时删数据'] },
+];
+
+const q = new URLSearchParams(location.search);
+const wantP = q.get('p') ? +q.get('p') : null;
+const size = q.get('size') === '34' ? 'p3x4' : 'p9x16';
+
+const stage = document.getElementById('stage');
+stage.innerHTML = DATA.map(d => `
+  <div class="poster ${size} ${(!wantP || wantP === d.n) ? 'show' : ''}"
+       id="p${d.n}" style="--ac:${d.ac};--bg:${d.bg};--acs:${d.acs}">
+    <div class="deco d1"></div><div class="deco d2"></div><div class="deco d3"></div>
+
+    <div class="brand">
+      <span class="mark">M.</span>
+      <span class="name">「留白」<small>Margin</small></span>
+    </div>
+    <div class="tag">#大学生的时间管理</div>
+
+    <div class="eyebrow">${d.eyebrow}</div>
+    <div class="title">
+      <div class="line">${d.l1}</div>
+      <div class="line"><span class="hl">${d.l2}</span></div>
+    </div>
+
+    <div class="phone"><div class="screen">
+      <img class="shot" src="${SHOTS}/${d.shot}" alt="${d.eyebrow}">
+    </div></div>
+
+    <div class="notes">
+      ${d.notes.map(([b,p]) => `<div class="note"><b><i></i>${b}</b><p>${p}</p></div>`).join('')}
+    </div>
+    <div class="note note--float"><b><i></i>${d.float[0]}</b><p>${d.float[1]}</p></div>
+
+    <div class="chips"><span>完全免费</span><span>无广告</span><span>数据只存本机</span></div>
+    <div class="cta"><b>下载「留白」</b><span>写给总在刷手机的大学生</span></div>
+  </div>
+`).join('');
+</script>
+</body>
+</html>

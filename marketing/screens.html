@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>Margin screens</title>
+<style>
+  /* 设计 token 直接取自 App：core/designsystem/theme/Color.kt */
+  :root{
+    --teal600:#0A7A61; --teal500:#0F9677; --teal700:#08624E; --teal100:#D3EFE3;
+    --amber:#E8930C; --info:#3E63DD; --social:#D6568A; --violet:#7C6BD9;
+    --page:#F8F6F1; --card:#FFFFFF; --window:#F1EEE7; --border:#E6E1D6; --divider:#EEE9DF;
+    --t1:#1B1915; --t2:#6E675C; --t3:#98907F;
+  }
+  *{box-sizing:border-box; -webkit-font-smoothing:antialiased}
+  body{margin:0;background:#ddd;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+  .screen{
+    width:390px;height:844px;background:var(--page);position:relative;overflow:hidden;
+    color:var(--t1);display:flex;flex-direction:column;
+  }
+  .screen + .screen{margin-top:24px}
+  .body{flex:1;overflow:hidden;padding:0 20px}
+
+  /* 顶部 */
+  .top{padding:18px 20px 6px;display:flex;align-items:flex-end;justify-content:space-between}
+  .display{font-size:32px;font-weight:700;letter-spacing:.5px;line-height:1.15}
+  .sub{font-size:12px;color:var(--t3);margin-top:4px}
+  .page-title{font-size:26px;font-weight:700}
+
+  /* 卡片 */
+  .card{background:var(--card);border-radius:20px;border:1px solid var(--border);padding:18px;margin-top:14px}
+  .card-title{font-size:17px;font-weight:700}
+  .card-head{display:flex;align-items:center;justify-content:space-between}
+  .link{font-size:13px;color:var(--teal600);font-weight:600}
+
+  /* 环形 */
+  .ring-wrap{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px}
+  .ring{position:relative;width:190px;height:190px}
+  .ring svg{transform:rotate(-90deg)}
+  .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .ring-num{font-size:27px;font-weight:700;letter-spacing:.5px;line-height:1.18;text-align:center;max-width:132px}
+  .ring-cap{font-size:12px;color:var(--t3)}
+  .ring-pct{position:absolute;right:-2px;top:6px;font-size:12px;color:var(--teal600);font-weight:700}
+
+  /* 双指标 */
+  .dual{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .metric{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px 16px}
+  .metric .k{font-size:12px;color:var(--t3)}
+  .metric .v{font-size:22px;font-weight:700;margin-top:4px}
+  .metric .v small{font-size:13px;font-weight:600;color:var(--t2);margin-left:2px}
+
+  /* 列表行 */
+  .row{display:flex;align-items:center;gap:12px;padding:9px 0}
+  .ico{width:36px;height:36px;border-radius:50%;background:var(--window);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--t2);flex:none}
+  .row-main{flex:1;min-width:0}
+  .row-name{font-size:14px;font-weight:600}
+  .bar{height:6px;border-radius:99px;background:var(--window);margin-top:6px;overflow:hidden}
+  .bar > i{display:block;height:100%;border-radius:99px;background:var(--teal600)}
+  .row-time{font-size:13px;color:var(--t2);flex:none}
+  .row-sub{font-size:11px;color:var(--t3);margin-top:2px}
+
+  /* 底栏 */
+  .nav{height:64px;border-top:1px solid var(--divider);background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:space-around;padding-bottom:6px}
+  .nav .item{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--t3)}
+  .nav .item.on{color:var(--teal600);font-weight:700}
+  .nav .dot{width:22px;height:22px;border-radius:8px;border:1.8px solid currentColor;opacity:.9}
+  .nav .item.on .dot{background:var(--teal100);border-color:var(--teal600)}
+  .nav .ring-mini{width:22px;height:22px;border-radius:50%;border:1.8px solid currentColor;position:relative}
+  .nav .ring-mini:after{content:"";position:absolute;inset:5px;border-radius:50%;background:currentColor;opacity:.18}
+
+  /* 分段控件 */
+  .seg{display:flex;background:var(--window);border-radius:14px;padding:4px;margin-top:14px}
+  .seg > div{flex:1;text-align:center;font-size:13px;font-weight:600;color:var(--t2);padding:9px 0;border-radius:11px}
+  .seg > div.on{background:var(--card);color:var(--t1);box-shadow:0 2px 6px rgba(27,25,21,.08)}
+
+  /* chips */
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .chip{padding:8px 14px;border-radius:99px;border:1px solid var(--border);background:var(--card);font-size:13px;color:var(--t2)}
+  .chip.on{background:var(--teal100);border-color:var(--teal600);color:var(--teal700);font-weight:600}
+
+  /* 主按钮 */
+  .cta-btn{margin:16px 0 8px;height:52px;border-radius:16px;background:var(--teal600);color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+  /* 柱状图 */
+  .chart{display:flex;align-items:flex-end;gap:10px;height:150px;margin-top:18px;padding:0 2px}
+  .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%}
+  .pair{display:flex;gap:3px;align-items:flex-end;height:100%;width:100%;justify-content:center}
+  .pair i{width:9px;border-radius:6px 6px 3px 3px;display:block}
+  .pair .s{background:var(--teal600)}
+  .pair .f{background:var(--amber)}
+  .col span{font-size:10px;color:var(--t3)}
+  .legend{display:flex;gap:16px;font-size:12px;color:var(--t2);margin-top:6px}
+  .legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+
+  /* 桌面（小部件场景） */
+  .launcher{background:linear-gradient(180deg,#F3F0E7 0%,#E7EFE9 100%);height:100%;padding:56px 20px 0}
+  .widget{background:rgba(255,255,255,.92);border:1px solid rgba(230,225,214,.9);border-radius:26px;padding:18px;box-shadow:0 12px 30px rgba(27,25,21,.08)}
+  .widget .wtop{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t3)}
+  .mark{width:26px;height:26px;border-radius:9px;background:var(--teal600);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;font-family:Georgia,serif}
+  .widget .big{font-size:30px;font-weight:700;margin-top:8px;letter-spacing:.5px}
+  .widget .cap{font-size:11px;color:var(--t3);margin-top:2px}
+  .widget .wfoot{display:flex;justify-content:space-between;margin-top:12px;font-size:12px;color:var(--t2)}
+  .widget-wide{margin-top:14px;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-radius:22px}
+  .apps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:28px}
+  .app{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .app i{width:54px;height:54px;border-radius:16px;background:rgba(255,255,255,.75);border:1px solid rgba(230,225,214,.8)}
+  .app span{font-size:10px;color:var(--t3)}
+
+  /* 设置 */
+  .group{background:var(--card);border:1px solid var(--border);border-radius:20px;margin-top:14px;overflow:hidden}
+  .srow{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--divider);font-size:14px}
+  .srow:last-child{border-bottom:0}
+  .srow .r{font-size:13px;color:var(--t3)}
+  .ok{color:var(--teal600);font-weight:700}
+  .switch{width:42px;height:24px;border-radius:99px;background:var(--teal600);position:relative;flex:none}
+  .switch:after{content:"";position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:#fff}
+  .privacy{padding:16px 18px;font-size:12.5px;color:var(--t2);line-height:1.6}
+  .privacy b{color:var(--t1)}
+</style>
+</head>
+<body>
+
+<!-- ============ 01 首页：屏幕时间总览 ============ -->
+<div class="screen" id="s1">
+  <div class="top">
+    <div>
+      <div class="display">「留白」</div>
+      <div class="sub">10月20日 周一 · 今天还没结束</div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="card">
+      <div class="ring-wrap">
+        <div class="ring">
+          <svg width="190" height="190" viewBox="0 0 190 190">
+            <circle cx="95" cy="95" r="82" fill="none" stroke="#F1EEE7" stroke-width="14"/>
+            <circle cx="95" cy="95" r="82" fill="none" stroke="#0A7A61" stroke-width="14"
+                    stroke-linecap="round" stroke-dasharray="515" stroke-dashoffset="180"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-num">3 小时<br>12 分</div>
+            <div class="ring-cap">今日屏幕时间</div>
+          </div>
+        </div>
+      </div>
+      <div class="dual">
+        <div class="metric">
+          <div class="k">专注</div>
+          <div class="v">1 <small>小时</small> 05 <small>分</small></div>
+        </div>
+        <div class="metric">
+          <div class="k">拿起手机</div>
+          <div class="v">47 <small>次</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">今日占用最多</div>
+        <div class="link">全部统计</div>
+      </div>
+      <div class="row">
+        <div class="ico">抖</div>
+        <div class="row-main">
+          <div class="row-name">抖音</div>
+          <div class="bar"><i style="width:100%"></i></div>
+        </div>
+        <div class="row-time">1 小时 12 分</div>
+      </div>
+      <div class="row">
+        <div class="ico">微</div>
+        <div class="row-main">
+          <div class="row-name">微信</div>
+          <div class="bar"><i style="width:66%"></i></div>
+        </div>
+        <div class="row-time">48 分</div>
+      </div>
+      <div class="row">
+        <div class="ico">B</div>
+        <div class="row-main">
+          <div class="row-name">哔哩哔哩</div>
+          <div class="bar"><i style="width:50%"></i></div>
+        </div>
+        <div class="row-time">36 分</div>
+      </div>
+    </div>
+
+    <div class="card" style="display:flex;align-items:center;justify-content:space-between;background:var(--teal100);border-color:var(--teal600)">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--teal700)">现在开始专注</div>
+        <div style="font-size:12px;color:var(--teal700);opacity:.8;margin-top:4px">25 分钟后回来看看自己的成果</div>
+      </div>
+      <div style="width:44px;height:44px;border-radius:14px;background:var(--teal600);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px">›</div>
+    </div>
+  </div>
+  <div class="nav">
+    <div class="item on"><span class="dot"></span>首页</div>
+    <div class="item"><span class="ring-mini"></span>专注</div>
+    <div class="item"><span class="dot"></span>统计</div>
+    <div class="item"><span class="dot"></span>设置</div>
+  </div>
+</div>
+
+<!-- ============ 02 专注 ============ -->
+<div class="screen" id="s2">
+  <div class="top">
+    <div class="page-title">专注</div>
+  </div>
+  <div class="body">
+    <div class="seg">
+      <div>番茄</div>
+      <div class="on">倒计时</div>
+      <div>正计时</div>
+    </div>
+
+    <div class="card" style="text-align:center;padding:24px 18px 18px">
+      <div class="ring" style="margin:0 auto">
+        <svg width="190" height="190" viewBox="0 0 190 190">
+          <circle cx="95" cy="95" r="82" fill="none" stroke="#F1EEE7" stroke-width="14"/>
+          <circle cx="95" cy="95" r="82" fill="none" stroke="#E8930C" stroke-width="14"
+                  stroke-linecap="round" stroke-dasharray="515" stroke-dashoffset="129"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-num" style="font-variant-numeric:tabular-nums">25:00</div>
+          <div class="ring-cap">倒计时 · 学习</div>
+        </div>
+      </div>
+      <div class="chips" style="justify-content:center">
+        <div class="chip on">学习</div>
+        <div class="chip">工作</div>
+        <div class="chip">阅读</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">白噪音</div>
+      <div class="chips">
+        <div class="chip on">雨声</div>
+        <div class="chip">溪流</div>
+        <div class="chip">森林</div>
+        <div class="chip">棕噪音</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+        <span style="font-size:12px;color:var(--t3)">音量</span>
+        <div style="flex:1;height:4px;border-radius:9px;background:var(--window);position:relative">
+          <div style="width:62%;height:4px;border-radius:9px;background:var(--teal600)"></div>
+          <div style="position:absolute;left:62%;top:-5px;width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid var(--teal600);transform:translateX(-7px)"></div>
+        </div>
+        <span style="font-size:12px;color:var(--t3)">62%</span>
+      </div>
+    </div>
+
+    <div class="cta-btn">开始专注</div>
+  </div>
+  <div class="nav">
+    <div class="item"><span class="dot"></span>首页</div>
+    <div class="item on"><span class="ring-mini"></span>专注</div>
+    <div class="item"><span class="dot"></span>统计</div>
+    <div class="item"><span class="dot"></span>设置</div>
+  </div>
+</div>
+
+<!-- ============ 03 应用限额 ============ -->
+<div class="screen" id="s3">
+  <div class="top">
+    <div>
+      <div class="page-title">应用限额</div>
+      <div class="sub">到点提醒，不硬关你</div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="card">
+      <div class="card-head" style="margin-bottom:6px">
+        <div class="card-title">今天的额度</div>
+        <div class="link">＋ 添加应用</div>
+      </div>
+
+      <div class="row">
+        <div class="ico">抖</div>
+        <div class="row-main">
+          <div class="row-name">抖音</div>
+          <div class="bar"><i style="width:75%;background:#D6568A"></i></div>
+          <div class="row-sub">已用 45 分 / 限额 60 分</div>
+        </div>
+        <div class="row-time" style="color:#D6568A;font-weight:700">75%</div>
+      </div>
+
+      <div class="row">
+        <div class="ico">B</div>
+        <div class="row-main">
+          <div class="row-name">哔哩哔哩</div>
+          <div class="bar"><i style="width:84%;background:#3E63DD"></i></div>
+          <div class="row-sub">已用 38 分 / 限额 45 分</div>
+        </div>
+        <div class="row-time" style="color:#3E63DD;font-weight:700">84%</div>
+      </div>
+
+      <div class="row">
+        <div class="ico">微</div>
+        <div class="row-main">
+          <div class="row-name">微博</div>
+          <div class="bar"><i style="width:67%"></i></div>
+          <div class="row-sub">已用 20 分 / 限额 30 分</div>
+        </div>
+        <div class="row-time" style="font-weight:700">67%</div>
+      </div>
+
+      <div class="row">
+        <div class="ico">小</div>
+        <div class="row-main">
+          <div class="row-name">小红书</div>
+          <div class="bar"><i style="width:60%;background:#7C6BD9"></i></div>
+          <div class="row-sub">已用 12 分 / 限额 20 分</div>
+        </div>
+        <div class="row-time" style="color:#7C6BD9;font-weight:700">60%</div>
+      </div>
+    </div>
+
+    <div class="card" style="background:var(--teal100);border-color:var(--teal600)">
+      <div style="font-size:14px;font-weight:700;color:var(--teal700)">今天还剩 15 分钟额度</div>
+      <div style="font-size:12.5px;color:var(--teal700);opacity:.85;margin-top:6px;line-height:1.55">
+        用完之后会提醒你一次，不会强制关闭应用。什么时候继续，由你决定。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" style="margin-bottom:8px">
+        <div class="card-title">本周被拦下的时间</div>
+        <div class="link">全部应用</div>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:10px;margin-top:6px">
+        <div style="font-size:30px;font-weight:700;color:var(--teal600)">4 小时 18 分</div>
+        <div style="font-size:12px;color:var(--t3);padding-bottom:5px">相当于两集剧</div>
+      </div>
+      <div class="bar" style="margin-top:12px"><i style="width:68%;background:var(--teal500)"></i></div>
+      <div class="row-sub" style="margin-top:8px">周一 42 分 · 周二 1 小时 05 分 · 周三 58 分 …</div>
+    </div>
+  </div>
+  <div class="nav">
+    <div class="item"><span class="dot"></span>首页</div>
+    <div class="item"><span class="ring-mini"></span>专注</div>
+    <div class="item"><span class="dot"></span>统计</div>
+    <div class="item on"><span class="dot"></span>设置</div>
+  </div>
+</div>
+
+<!-- ============ 04 统计 ============ -->
+<div class="screen" id="s4">
+  <div class="top">
+    <div class="page-title">统计</div>
+  </div>
+  <div class="body">
+    <div class="seg">
+      <div>日</div>
+      <div class="on">周</div>
+      <div>月</div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">本周屏幕时间</div>
+        <div class="link">平均 3 小时 05 分</div>
+      </div>
+      <div class="chart">
+        <div class="col"><div class="pair"><i class="s" style="height:54%"></i><i class="f" style="height:22%"></i></div><span>一</span></div>
+        <div class="col"><div class="pair"><i class="s" style="height:72%"></i><i class="f" style="height:34%"></i></div><span>二</span></div>
+        <div class="col"><div class="pair"><i class="s" style="height:61%"></i><i class="f" style="height:48%"></i></div><span>三</span></div>
+        <div class="col"><div class="pair"><i class="s" style="height:88%"></i><i class="f" style="height:18%"></i></div><span>四</span></div>
+        <div class="col"><div class="pair"><i class="s" style="height:66%"></i><i class="f" style="height:56%"></i></div><span>五</span></div>
+        <div class="col"><div class="pair"><i class="s" style="height:95%"></i><i class="f" style="height:12%"></i></div><span>六</span></div>
+        <div class="col"><div class="pair"><i class="s" style="height:47%"></i><i class="f" style="height:66%"></i></div><span>日</span></div>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--teal600)"></i>屏幕时间</span>
+        <span><i style="background:var(--amber)"></i>专注时长</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:6px">应用排行</div>
+      <div class="row">
+        <div class="ico">抖</div>
+        <div class="row-main">
+          <div class="row-name">抖音</div>
+          <div class="bar"><i style="width:100%;background:#D6568A"></i></div>
+        </div>
+        <div class="row-time">6 小时 20 分</div>
+      </div>
+      <div class="row">
+        <div class="ico">B</div>
+        <div class="row-main">
+          <div class="row-name">哔哩哔哩</div>
+          <div class="bar"><i style="width:58%;background:#3E63DD"></i></div>
+        </div>
+        <div class="row-time">3 小时 41 分</div>
+      </div>
+      <div class="row">
+        <div class="ico">微</div>
+        <div class="row-main">
+          <div class="row-name">微信</div>
+          <div class="bar"><i style="width:44%"></i></div>
+        </div>
+        <div class="row-time">2 小时 48 分</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav">
+    <div class="item"><span class="dot"></span>首页</div>
+    <div class="item"><span class="ring-mini"></span>专注</div>
+    <div class="item on"><span class="dot"></span>统计</div>
+    <div class="item"><span class="dot"></span>设置</div>
+  </div>
+</div>
+
+<!-- ============ 05 小部件（桌面） ============ -->
+<div class="screen" id="s5">
+  <div class="launcher">
+    <div class="widget">
+      <div class="wtop"><span class="mark">M.</span> 留白 · 今日</div>
+      <div class="big">3 小时 12 分</div>
+      <div class="cap">屏幕时间</div>
+      <div class="wfoot">
+        <span>专注 1 小时 05 分</span>
+        <span>拿起 47 次</span>
+      </div>
+    </div>
+
+    <div class="widget widget-wide" style="background:rgba(255,255,255,.92)">
+      <span class="mark">M.</span>
+      <span style="font-size:15px;font-weight:700">3 小时 12 分</span>
+      <span style="font-size:12px;color:var(--t2)">专注 1 小时 05 分</span>
+    </div>
+
+    <div class="apps">
+      <div class="app"><i></i><span>相机</span></div>
+      <div class="app"><i></i><span>相册</span></div>
+      <div class="app"><i></i><span>日历</span></div>
+      <div class="app"><i></i><span>天气</span></div>
+      <div class="app"><i></i><span>备忘录</span></div>
+      <div class="app"><i></i><span>音乐</span></div>
+      <div class="app"><i></i><span>浏览器</span></div>
+      <div class="app"><i></i><span>设置</span></div>
+      <div class="app"><i></i><span>地图</span></div>
+      <div class="app"><i></i><span>邮箱</span></div>
+      <div class="app"><i></i><span>文件</span></div>
+      <div class="app"><i></i><span>计算器</span></div>
+      <div class="app"><i></i><span>时钟</span></div>
+      <div class="app"><i></i><span>录音</span></div>
+    </div>
+
+    <div style="position:absolute;left:20px;right:20px;bottom:26px;display:flex;justify-content:space-around;padding:14px 18px;border-radius:26px;background:rgba(255,255,255,.6);backdrop-filter:blur(8px)">
+      <div class="app" style="gap:0"><i style="width:46px;height:46px;border-radius:14px"></i></div>
+      <div class="app" style="gap:0"><i style="width:46px;height:46px;border-radius:14px"></i></div>
+      <div class="app" style="gap:0"><i style="width:46px;height:46px;border-radius:14px"></i></div>
+      <div class="app" style="gap:0"><i style="width:46px;height:46px;border-radius:14px"></i></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 06 设置 / 隐私 ============ -->
+<div class="screen" id="s6">
+  <div class="top">
+    <div class="page-title">设置</div>
+  </div>
+  <div class="body">
+    <div class="group">
+      <div class="srow"><span>启用屏幕使用监控</span><span class="switch"></span></div>
+      <div class="srow"><span>使用情况访问权限</span><span class="r ok">已授权</span></div>
+      <div class="srow"><span>精确监控（更及时）</span><span class="r">已开启</span></div>
+      <div class="srow"><span>应用限额</span><span class="r">4 个应用</span></div>
+    </div>
+
+    <div class="group">
+      <div class="srow"><span>主题</span><span class="r">跟随系统</span></div>
+      <div class="srow"><span>检查更新</span><span class="r">v1.2.7</span></div>
+      <div class="srow"><span>关于与隐私</span><span class="r">›</span></div>
+    </div>
+
+    <div class="card" style="background:var(--teal100);border-color:var(--teal600)">
+      <div style="font-size:14px;font-weight:700;color:var(--teal700)">你的数据只属于你</div>
+      <div class="privacy" style="color:var(--teal700);padding:10px 0 0;opacity:.9">
+        <b>没有账号体系</b>，就没有可以泄露的东西。使用记录只写在手机本地，
+        不上传、不同步、不卖给任何人。换手机时用导出的 JSON 备份自己带走。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">完全免费</div>
+      <div class="privacy" style="padding:8px 0 0">
+        无会员、无订阅、无广告、无第三方追踪 SDK。所有功能一开始就全部开放。
+      </div>
+    </div>
+  </div>
+  <div class="nav">
+    <div class="item"><span class="dot"></span>首页</div>
+    <div class="item"><span class="ring-mini"></span>专注</div>
+    <div class="item"><span class="dot"></span>统计</div>
+    <div class="item on"><span class="dot"></span>设置</div>
+  </div>
+</div>
+
+</body>
+</html>
