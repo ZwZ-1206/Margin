@@ -75,6 +75,14 @@ fun SettingsScreen(
     }
     var toast by remember { mutableStateOf<String?>(null) }
 
+    // 版本号从系统读自身包信息，不再硬编码——之前写死 "1.2.7" 导致发了好几版都显示同一个号
+    val appVersion = remember(context) {
+        runCatching {
+            @Suppress("DEPRECATION")
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        }.getOrNull().orEmpty().ifBlank { "—" }
+    }
+
     val createBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
         uri?.let { target ->
             vm.exportBackup { json ->
@@ -343,7 +351,7 @@ fun SettingsScreen(
                         modifier = Modifier.weight(1f),
                     )
                     Text(
-                        "1.2.7",
+                        appVersion,
                         style = MaterialTheme.typography.bodySmall,
                         color = extras.textSecondary,
                     )
@@ -351,8 +359,8 @@ fun SettingsScreen(
                     TextButton(onClick = onCheckUpdate) { Text("检查更新") }
                 }
                 InfoRow("名称", "Margin「留白」")
-                InfoRow("官方网站", "margin.liubai.app")
-                InfoRow("开源许可", "MIT License")
+                InfoRow("官方网站", "margin-8ux.pages.dev")
+                InfoRow("开源协议", "MIT License")
                 InfoRow("数据存储", "仅本机（Room + DataStore）")
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {

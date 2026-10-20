@@ -46,6 +46,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.2.11',
+    date: '2026-10-20',
+    status: 'released',
+    items: [
+      '<b>版本号</b>：设置页「关于」里的版本号此前是写死的 1.2.7，连发几版都显示同一个数字；改为读取安装包自身的版本，以后不会再对不上',
+      '<b>官网地址</b>：关于页显示的域名改为真实可访问的地址',
+    ],
+  },
+  {
     version: 'v1.2.10',
     date: '2026-10-20',
     status: 'released',
