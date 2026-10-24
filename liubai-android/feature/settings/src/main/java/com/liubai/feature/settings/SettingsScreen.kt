@@ -50,6 +50,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.liubai.core.designsystem.component.PermissionRationaleDialog
 import com.liubai.core.designsystem.component.SectionCard
+import com.liubai.data.lock.AppLockManager
 import com.liubai.data.usage.UsageAccess
 import com.liubai.core.designsystem.component.SegmentedToggle
 import com.liubai.core.designsystem.theme.LocalExtraColors
@@ -68,10 +69,14 @@ fun SettingsScreen(
     val extras = LocalExtraColors.current
     val context = LocalContext.current
     var showPermDialog by remember { mutableStateOf(false) }
+    var showPinDialog by remember { mutableStateOf(false) }
     // 权限状态不是响应式的：从系统设置返回时重新检查一次
     var usageGranted by remember { mutableStateOf(UsageAccess.isGranted(context)) }
+    // 无障碍服务同理：去系统设置开完回来要刷新状态
+    var lockServiceOn by remember { mutableStateOf(AppLockManager.isLockServiceEnabled(context)) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         usageGranted = UsageAccess.isGranted(context)
+        lockServiceOn = AppLockManager.isLockServiceEnabled(context)
     }
     var toast by remember { mutableStateOf<String?>(null) }
 
@@ -223,13 +228,86 @@ fun SettingsScreen(
                 Text("干预", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "全部默认关闭。留白只做提醒，不拦截、不锁屏。",
+                    "全部默认关闭。留白只做提醒，不拦截、不锁屏——除非你在下面亲手打开硬锁。",
                     style = MaterialTheme.typography.bodySmall,
                     color = extras.textTertiary,
                 )
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(onClick = onOpenLimits, modifier = Modifier.fillMaxWidth()) {
                     Text("应用每日限额")
+                }
+                Spacer(Modifier.height(12.dp))
+
+                // ===== 硬锁（默认关闭）=====
+                Text("硬锁", style = MaterialTheme.typography.titleMedium, color = extras.textPrimary)
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "默认关闭。开启后，可在「应用每日限额」里给单个应用设置「达到限额后锁定」——" +
+                        "再打开它就需要输入六位解锁密码，解锁后有 10 分钟宽限。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = extras.textTertiary,
+                )
+                Spacer(Modifier.height(8.dp))
+                SwitchRow(
+                    "启用硬锁",
+                    state.settings.hardLockEnabled,
+                ) { on -> vm.setHardLock(context, on) }
+                if (state.settings.hardLockEnabled) {
+                    val passwordSet = state.settings.lockPasswordHash != null
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                "解锁密码",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = extras.textPrimary,
+                            )
+                            Text(
+                                if (passwordSet) "已设置（六位数字）" else "未设置——开锁之前需要先设一个",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (passwordSet) extras.success else extras.warning,
+                            )
+                        }
+                        if (passwordSet) {
+                            TextButton(onClick = { vm.clearLockPassword(context) }) { Text("清除") }
+                            OutlinedButton(onClick = { showPinDialog = true }) { Text("修改") }
+                        } else {
+                            Button(onClick = { showPinDialog = true }) { Text("设置密码") }
+                        }
+                    }
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                "无障碍服务",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = extras.textPrimary,
+                            )
+                            Text(
+                                if (lockServiceOn) "已开启"
+                                else "未开启——硬锁靠它在前台应用切换时弹出锁定界面",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (lockServiceOn) extras.success else extras.warning,
+                            )
+                        }
+                        if (!lockServiceOn) {
+                            Button(onClick = { AppLockManager.openAccessibilitySettings(context) }) {
+                                Text("去开启")
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "说清楚的边界：卸载留白、清除留白数据、在系统设置里关掉无障碍服务，" +
+                            "都能绕过硬锁；忘记密码只能等次日零点自动解锁。留白只做「让自己更难刷到」的那道闸，" +
+                            "不假装它是一把谁也打不开的锁。",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = extras.textTertiary,
+                    )
                 }
                 Spacer(Modifier.height(12.dp))
                 SwitchRow(
@@ -393,6 +471,18 @@ fun SettingsScreen(
                 )
             },
             onDismiss = { showPermDialog = false },
+        )
+    }
+
+    if (showPinDialog) {
+        PinSetupDialog(
+            title = if (state.settings.lockPasswordHash != null) "修改解锁密码" else "设置解锁密码",
+            onConfirm = { pin ->
+                showPinDialog = false
+                vm.setLockPassword(pin)
+                toast = "解锁密码已设置"
+            },
+            onDismiss = { showPinDialog = false },
         )
     }
 

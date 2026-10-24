@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.liubai.data.di.ServiceLocator
+import com.liubai.data.lock.AppLockManager
 import com.liubai.data.repository.BackupManager
 import com.liubai.data.work.MonitorService
 import com.liubai.data.work.WorkScheduler
@@ -130,6 +131,30 @@ class SettingsViewModel : ViewModel() {
                 if (enabled) context.startForegroundService(intent)
                 else context.startService(intent)
             }
+        }
+    }
+
+    /**
+     * 硬锁总开关（默认关闭）。
+     * 关掉时清掉所有宽限期——否则会出现「开关关了，十分钟内照样放行」的漏洞。
+     */
+    fun setHardLock(context: Context, enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepo.update { it.copy(hardLockEnabled = enabled) }
+            if (!enabled) AppLockManager.clearAllGrace(context)
+        }
+    }
+
+    /** 设置 / 修改六位解锁密码（只存 SHA-256 哈希） */
+    fun setLockPassword(pin: String) = update {
+        it.copy(lockPasswordHash = AppLockManager.hashPin(pin))
+    }
+
+    /** 清除密码：同时关闭总开关，不留下「开着锁却没有密码」的半成品状态 */
+    fun clearLockPassword(context: Context) {
+        viewModelScope.launch {
+            settingsRepo.update { it.copy(lockPasswordHash = null, hardLockEnabled = false) }
+            AppLockManager.clearAllGrace(context)
         }
     }
 

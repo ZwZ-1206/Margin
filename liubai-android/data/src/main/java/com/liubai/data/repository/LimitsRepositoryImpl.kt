@@ -12,16 +12,20 @@ class LimitsRepositoryImpl(private val db: LiubaiDatabase) : LimitsRepository {
     private val dao = db.limitDao()
 
     override fun observeLimits(): Flow<List<AppLimit>> =
-        dao.observeAll().map { list -> list.map { AppLimit(it.packageName, it.limitMs, it.enabled) } }
+        dao.observeAll().map { list ->
+            list.map { AppLimit(it.packageName, it.limitMs, it.enabled, it.hardLock) }
+        }
 
     override suspend fun setLimit(limit: AppLimit) =
-        dao.upsert(AppLimitEntity(limit.packageName, limit.limitMs, limit.enabled))
+        dao.upsert(
+            AppLimitEntity(limit.packageName, limit.limitMs, limit.enabled, limit.hardLock)
+        )
 
     override suspend fun removeLimit(packageName: String) = dao.delete(packageName)
 
     override suspend fun listLimits(): List<AppLimit> =
-        dao.listAll().map { AppLimit(it.packageName, it.limitMs, it.enabled) }
+        dao.listAll().map { AppLimit(it.packageName, it.limitMs, it.enabled, it.hardLock) }
 
     override suspend fun limitOf(packageName: String): AppLimit? =
-        dao.get(packageName)?.let { AppLimit(it.packageName, it.limitMs, it.enabled) }
+        dao.get(packageName)?.let { AppLimit(it.packageName, it.limitMs, it.enabled, it.hardLock) }
 }

@@ -108,4 +108,11 @@ data class AppSettings(
     /** 赞助收款码图片路径（filesDir 内相对路径，null = 未上传） */
     val sponsorQrPath: String? = null,
     val challenge: ChallengeConfig = ChallengeConfig(),
+    /**
+     * 硬锁总开关（默认关闭）。关闭时所有「达到限额后锁定应用」均不生效，
+     * 每日限额只保留原有的通知提醒。
+     */
+    val hardLockEnabled: Boolean = false,
+    /** 六位数解锁密码的 SHA-256 十六进制串；null = 未设置密码 */
+    val lockPasswordHash: String? = null,
 )

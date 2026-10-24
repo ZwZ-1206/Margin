@@ -5,6 +5,11 @@ data class AppLimit(
     val packageName: String,
     val limitMs: Long,
     val enabled: Boolean = true,
+    /**
+     * 硬锁：今日用量达到 limitMs 后锁定该应用，需输入解锁密码才能继续使用。
+     * 仅在总开关（AppSettings.hardLockEnabled）打开且已设置密码时生效。
+     */
+    val hardLock: Boolean = false,
 )
 
 /** 干预挑战配置：全部默认关闭，由用户决定何时需要 */

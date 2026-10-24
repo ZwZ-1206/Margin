@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">留白</string>
+    <string name="accessibility_service_label">留白 · 应用硬锁</string>
+    <string name="accessibility_service_description">
+        当某个应用达到你设定的每日限额、且你为该应用开启了「达限额后锁定」时，留白会在该应用切换到前台时弹出解锁界面，输入六位数密码后才能继续使用。\n\n留白只读取当前前台应用的包名，不读取屏幕内容，不收集、不上传任何数据。关闭此服务后硬锁失效，限额提醒不受影响。
+    </string>
 </resources>

@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [
@@ -14,7 +16,7 @@ import androidx.room.RoomDatabase
         CollectCursorEntity::class,
         AppLimitEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class LiubaiDatabase : RoomDatabase() {
@@ -28,9 +30,19 @@ abstract class LiubaiDatabase : RoomDatabase() {
         @Volatile
         private var instance: LiubaiDatabase? = null
 
+        /** v1 → v2：app_limits 新增 hardLock 列（硬锁开关，默认关闭） */
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE app_limits ADD COLUMN hardLock INTEGER NOT NULL DEFAULT 0"
+                )
+            }
+        }
+
         fun get(context: Context): LiubaiDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(context, LiubaiDatabase::class.java, "liubai.db")
+                    .addMigrations(MIGRATION_1_2)
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { instance = it }

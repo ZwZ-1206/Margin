@@ -83,6 +83,29 @@
                 android:value="focus_timer" />
         </service>
 
+        <!-- 硬锁：达到每日限额后锁定应用（默认关闭，用户在设置里手动开启） -->
+        <service
+            android:name=".lock.AppLockService"
+            android:exported="true"
+            android:label="@string/accessibility_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
+        <!-- 硬锁解锁界面：独立任务、不进最近任务、返回键被吞掉 -->
+        <activity
+            android:name=".lock.LockActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Liubai" />
+
         <!-- 专注结束闹钟兜底 -->
         <receiver
             android:name="com.liubai.data.focus.FocusAlarmReceiver"

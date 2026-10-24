@@ -22,10 +22,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
@@ -35,6 +37,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,6 +52,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -62,6 +66,9 @@ import com.liubai.data.usage.AppLabelResolver
 
 private val DURATION_OPTIONS = listOf(15, 30, 45, 60, 90, 120)
 
+/** 自定义时长上限：与每日屏幕目标一致，最多 12 小时 */
+private const val CUSTOM_MAX_MINUTES = 720
+
 @Composable
 fun LimitsScreen(
     modifier: Modifier = Modifier,
@@ -73,8 +80,19 @@ fun LimitsScreen(
     val context = LocalContext.current
     var showPicker by remember { mutableStateOf(false) }
     var pickingApp by remember { mutableStateOf<InstalledApp?>(null) }
+    // 已选时长、等待「是否硬锁」询问
+    var pendingMinutes by remember { mutableStateOf<Int?>(null) }
+    var showCustomDuration by remember { mutableStateOf(false) }
+    var showPinSetup by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { vm.loadInstalled(context) }
+
+    fun commit(minutes: Int, hardLock: Boolean, app: InstalledApp) {
+        vm.setLimit(app.packageName, minutes, hardLock)
+        pendingMinutes = null
+        pickingApp = null
+        showPicker = false
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize().padding(horizontal = 20.dp),
@@ -85,7 +103,7 @@ fun LimitsScreen(
             ScreenHeader(
                 title = "应用限额",
                 subtitle = "给某个应用设一个每日上限，快到时提醒一次，超过后再提醒一次。" +
-                    "默认全部关闭——需要时再打开。",
+                    "添加时也可以选择「达到限额后锁定」——硬锁默认关闭，需要六位解锁密码。",
                 onBack = onBack,
             )
         }
@@ -128,10 +146,39 @@ fun LimitsScreen(
                                 overflow = TextOverflow.Ellipsis,
                             )
                             Text(
-                                "每日 ${limit.limitMs / 60000} 分钟",
+                                buildString {
+                                    append("每日 ${limit.limitMs / 60000} 分钟")
+                                    if (limit.hardLock) append(" · 达限额后锁定")
+                                },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = extras.textTertiary,
                             )
+                            if (limit.packageName in state.lockedToday) {
+                                Text(
+                                    "今日已锁定：打开该应用需输入密码，解锁后有 10 分钟宽限",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = extras.warning,
+                                )
+                            } else if (limit.hardLock && !state.hardLockReady) {
+                                Text(
+                                    "硬锁未生效：请先到「设置 → 干预」开启总开关并设置密码",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = extras.warning,
+                                )
+                            }
+                        }
+                        if (state.hardLockReady) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Switch(
+                                    checked = limit.hardLock,
+                                    onCheckedChange = { vm.setHardLock(limit.packageName, it) },
+                                )
+                                Text(
+                                    "锁定",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = extras.textTertiary,
+                                )
+                            }
                         }
                         TextButton(onClick = { vm.remove(limit.packageName) }) { Text("移除") }
                     }
@@ -161,13 +208,66 @@ fun LimitsScreen(
                     pickingApp = null
                     showPicker = false
                 },
-                onConfirm = { min ->
-                    vm.setLimit(app.packageName, min)
-                    pickingApp = null
-                    showPicker = false
+                onPickDuration = { min ->
+                    // 不直接落库：先问要不要硬锁
+                    pendingMinutes = min
                 },
+                onCustom = { showCustomDuration = true },
             )
         }
+    }
+
+    // 自定义时长：小时、分钟分开设
+    if (showCustomDuration && pickingApp != null) {
+        CustomDurationDialog(
+            onConfirm = { min ->
+                showCustomDuration = false
+                pendingMinutes = min
+            },
+            onDismiss = { showCustomDuration = false },
+        )
+    }
+
+    // 达到限额后是否锁定？
+    val minutes = pendingMinutes
+    val app = pickingApp
+    if (minutes != null && app != null) {
+        HardLockAskDialog(
+            appLabel = app.label,
+            hardLockReady = state.hardLockReady,
+            onLock = {
+                if (state.hardLockReady) {
+                    commit(minutes, true, app)
+                } else {
+                    // 引导：先开总开关，缺密码再补设
+                    vm.ensureHardLockReady(
+                        onReady = { commit(minutes, true, app) },
+                        onNeedPassword = { showPinSetup = true },
+                    )
+                }
+            },
+            onSkip = { commit(minutes, false, app) },
+            onDismiss = { pendingMinutes = null },
+        )
+    }
+
+    // 引导流程里补设六位密码
+    if (showPinSetup) {
+        PinSetupDialog(
+            title = "设置解锁密码",
+            subtitle = "开启硬锁前，先设一个六位解锁密码。达到限额后锁定应用时，需要输入它才能继续使用。",
+            onConfirm = { pin ->
+                showPinSetup = false
+                vm.setLockPassword(pin)
+                val m = pendingMinutes
+                val a = pickingApp
+                if (m != null && a != null) commit(m, true, a)
+            },
+            onDismiss = {
+                showPinSetup = false
+                pendingMinutes = null
+            },
+        )
     }
 }
 
@@ -278,7 +378,8 @@ private fun DurationPanel(
     currentLimitMs: Long?,
     onBack: () -> Unit,
     onClose: () -> Unit,
-    onConfirm: (Int) -> Unit,
+    onPickDuration: (Int) -> Unit,
+    onCustom: () -> Unit,
 ) {
     val extras = LocalExtraColors.current
     // 第二步的返回键回到应用列表，而不是直接退出
@@ -290,7 +391,7 @@ private fun DurationPanel(
     ) {
         SurfacePanel(onClose = onClose, title = app.label, onBack = onBack) {
             Text(
-                "每天最多允许使用多久？到 90% 提醒一次，超过后再提醒一次。",
+                "每天最多允许使用多久？选完后会问你要不要「达到限额后锁定」。",
                 style = MaterialTheme.typography.bodySmall,
                 color = extras.textTertiary,
                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -304,7 +405,7 @@ private fun DurationPanel(
                     row.forEach { min ->
                         FilterChip(
                             selected = currentLimitMs == min * 60_000L,
-                            onClick = { onConfirm(min) },
+                            onClick = { onPickDuration(min) },
                             label = {
                                 Text("$min 分钟", maxLines = 1, style = MaterialTheme.typography.labelLarge)
                             },
@@ -314,6 +415,15 @@ private fun DurationPanel(
                 }
                 Spacer(Modifier.height(8.dp))
             }
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            ) {
+                FilterChip(
+                    selected = false,
+                    onClick = onCustom,
+                    label = { Text("自定义时长…") },
+                )
+            }
             Spacer(Modifier.height(8.dp))
             TextButton(
                 onClick = onBack,
@@ -321,6 +431,71 @@ private fun DurationPanel(
             ) { Text("← 换一个应用") }
         }
     }
+}
+
+/** 自定义时长：小时、分钟两个独立输入，避免「130 分钟」这种反人类读法 */
+@Composable
+private fun CustomDurationDialog(
+    onConfirm: (Int) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val extras = LocalExtraColors.current
+    var hours by remember { mutableStateOf("") }
+    var minutes by remember { mutableStateOf("") }
+    val h = hours.toIntOrNull() ?: 0
+    val m = minutes.toIntOrNull() ?: 0
+    val total = h * 60 + m
+    val valid = total in 1..CUSTOM_MAX_MINUTES && m in 0..59
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("自定义时长") },
+        text = {
+            Column {
+                Text(
+                    "小时和分钟分开填。到点后的处理（提醒或锁定）选完时长再决定。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = extras.textSecondary,
+                )
+                Spacer(Modifier.height(14.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = hours,
+                        onValueChange = { hours = it.filter { c -> c.isDigit() }.take(2) },
+                        label = { Text("小时") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                    )
+                    Spacer(Modifier.width(14.dp))
+                    OutlinedTextField(
+                        value = minutes,
+                        onValueChange = { minutes = it.filter { c -> c.isDigit() }.take(2) },
+                        label = { Text("分钟") },
+                        singleLine = true,
+                        isError = (minutes.toIntOrNull() ?: 0) > 59,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    when {
+                        total <= 0 -> "至少 1 分钟"
+                        total > CUSTOM_MAX_MINUTES -> "最多 12 小时（720 分钟）"
+                        m > 59 -> "分钟要小于 60"
+                        else -> "合计 ${total / 60} 小时 ${total % 60} 分钟"
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = extras.textTertiary,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = valid, onClick = { onConfirm(total) }) { Text("下一步") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
+    )
 }
 
 /** 统一的底部面板容器：标题栏 + 关闭 / 返回 */

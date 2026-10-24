@@ -6,7 +6,9 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.liubai.core.common.DateKeys
 import com.liubai.data.di.ServiceLocator
+import com.liubai.data.lock.AppLockManager
 import com.liubai.data.usage.AppLabelResolver
 import com.liubai.data.usage.UsageAccess
 import com.liubai.data.usage.UsageStatsReader
@@ -26,20 +28,46 @@ data class LimitsUiState(
     val limits: List<AppLimit> = emptyList(),
     val installed: List<InstalledApp> = emptyList(),
     val loadingApps: Boolean = true,
-)
+    /** 硬锁总开关是否打开 */
+    val hardLockEnabled: Boolean = false,
+    /** 是否已设置六位解锁密码 */
+    val lockPasswordSet: Boolean = false,
+    /** 今日已触发锁定的包名（列表角标用） */
+    val lockedToday: Set<String> = emptySet(),
+) {
+    /** 总开关 + 密码都就绪，单应用「达限额后锁定」才可用 */
+    val hardLockReady: Boolean get() = hardLockEnabled && lockPasswordSet
+}
 
 class LimitsViewModel : ViewModel() {
 
     private val repo = ServiceLocator.limitsRepository
     private val installedFlow = MutableStateFlow<List<InstalledApp>>(emptyList())
     private val loadingFlow = MutableStateFlow(true)
+    private val today = DateKeys.today()
 
     val uiState: StateFlow<LimitsUiState> = combine(
         repo.observeLimits(),
         installedFlow,
         loadingFlow,
-    ) { limits, installed, loading ->
-        LimitsUiState(limits = limits, installed = installed, loadingApps = loading)
+        ServiceLocator.settingsRepository.settings,
+        ServiceLocator.usageRepository.observeDailyUsage(today),
+    ) { limits, installed, loading, settings, usage ->
+        val used = usage.associate { it.packageName to it.totalMs }
+        val ready = settings.hardLockEnabled && !settings.lockPasswordHash.isNullOrBlank()
+        val locked = if (!ready) emptySet() else limits
+            .filter { it.enabled && it.hardLock }
+            .filter { (used[it.packageName] ?: 0L) >= it.limitMs }
+            .map { it.packageName }
+            .toSet()
+        LimitsUiState(
+            limits = limits,
+            installed = installed,
+            loadingApps = loading,
+            hardLockEnabled = settings.hardLockEnabled,
+            lockPasswordSet = !settings.lockPasswordHash.isNullOrBlank(),
+            lockedToday = locked,
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LimitsUiState())
 
     /**
@@ -100,13 +128,56 @@ class LimitsViewModel : ViewModel() {
         }
     }
 
-    fun setLimit(packageName: String, minutes: Int) {
+    /** 新增 / 更新限额。hardLock = 达到限额后锁定该应用 */
+    fun setLimit(packageName: String, minutes: Int, hardLock: Boolean = false) {
         viewModelScope.launch {
-            repo.setLimit(AppLimit(packageName, minutes * 60_000L))
+            val existing = repo.limitOf(packageName)
+            repo.setLimit(
+                AppLimit(
+                    packageName = packageName,
+                    limitMs = minutes * 60_000L,
+                    enabled = existing?.enabled ?: true,
+                    hardLock = hardLock,
+                )
+            )
+        }
+    }
+
+    /** 单应用硬锁开关（仅在总开关已开、密码已设时可操作） */
+    fun setHardLock(packageName: String, on: Boolean) {
+        viewModelScope.launch {
+            val cur = repo.limitOf(packageName) ?: return@launch
+            repo.setLimit(cur.copy(hardLock = on))
+            // 关掉单应用锁定时清掉宽限期，避免「关了就放行十分钟」的漏洞
+            if (!on) AppLockManager.clearGrace(ServiceLocator.appContext, packageName)
         }
     }
 
     fun remove(packageName: String) {
-        viewModelScope.launch { repo.removeLimit(packageName) }
+        viewModelScope.launch {
+            AppLockManager.clearGrace(ServiceLocator.appContext, packageName)
+            repo.removeLimit(packageName)
+        }
+    }
+
+    /**
+     * 添加限额时引导开启硬锁：先打开总开关，缺密码则回调要求设置。
+     * 总开关只在这里由用户确认后打开，不会偷偷自动开。
+     */
+    fun ensureHardLockReady(onReady: () -> Unit, onNeedPassword: () -> Unit) {
+        viewModelScope.launch {
+            ServiceLocator.settingsRepository.update { it.copy(hardLockEnabled = true) }
+            val cur = ServiceLocator.settingsRepository.current()
+            if (cur.lockPasswordHash.isNullOrBlank()) onNeedPassword() else onReady()
+        }
+    }
+
+    /** 设置 / 修改六位解锁密码（只存哈希） */
+    fun setLockPassword(pin: String) {
+        viewModelScope.launch {
+            ServiceLocator.settingsRepository.update {
+                it.copy(lockPasswordHash = AppLockManager.hashPin(pin))
+            }
+        }
     }
 }

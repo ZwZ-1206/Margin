@@ -44,6 +44,8 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         val CH_BED_ON = booleanPreferencesKey("ch_bedtime_on")
         val CH_BED_HOUR = intPreferencesKey("ch_bedtime_hour")
         val CH_BED_MIN = intPreferencesKey("ch_bedtime_minute")
+        val HARD_LOCK_ON = booleanPreferencesKey("hard_lock_enabled")
+        val LOCK_PASSWORD_HASH = stringPreferencesKey("lock_password_hash")
     }
 
     override val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -76,6 +78,8 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
                 bedtimeHour = p[Keys.CH_BED_HOUR] ?: 23,
                 bedtimeMinute = p[Keys.CH_BED_MIN] ?: 30,
             ),
+            hardLockEnabled = p[Keys.HARD_LOCK_ON] ?: false,
+            lockPasswordHash = p[Keys.LOCK_PASSWORD_HASH],
         )
     }
 
@@ -107,6 +111,9 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             p[Keys.CH_BED_ON] = next.challenge.bedtimeEnabled
             p[Keys.CH_BED_HOUR] = next.challenge.bedtimeHour
             p[Keys.CH_BED_MIN] = next.challenge.bedtimeMinute
+            p[Keys.HARD_LOCK_ON] = next.hardLockEnabled
+            next.lockPasswordHash?.let { p[Keys.LOCK_PASSWORD_HASH] = it }
+                ?: p.remove(Keys.LOCK_PASSWORD_HASH)
         }
     }
 

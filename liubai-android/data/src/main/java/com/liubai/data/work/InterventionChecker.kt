@@ -7,6 +7,7 @@ import androidx.core.app.NotificationCompat
 import com.liubai.core.common.DateKeys
 import com.liubai.core.common.DurationFormat
 import com.liubai.data.di.ServiceLocator
+import com.liubai.data.lock.AppLockManager
 import com.liubai.data.usage.AppLabelResolver
 import com.liubai.data.usage.UsageStatsReader
 import com.liubai.domain.model.ChallengeConfig
@@ -37,11 +38,14 @@ object InterventionChecker {
         val settings = ServiceLocator.settingsRepository.current()
         if (!settings.monitorEnabled) return
         val today = DateKeys.today()
-        checkLimits(context, today)
+        // 已触发硬锁的应用：通知文案要说明「已锁定」，而不是只说超限
+        val locked = runCatching { AppLockManager.lockedPackages(context) }
+            .getOrDefault(emptySet())
+        checkLimits(context, today, locked)
         checkChallenges(context, today, settings.challenge)
     }
 
-    private suspend fun checkLimits(context: Context, date: String) {
+    private suspend fun checkLimits(context: Context, date: String, locked: Set<String>) {
         val enabled = ServiceLocator.limitsRepository.listLimits().filter { it.enabled }
         if (enabled.isEmpty()) return
         val rows = ServiceLocator.database.usageDao().listRange(date, date)
@@ -55,11 +59,17 @@ object InterventionChecker {
             when {
                 used >= limit.limitMs -> {
                     if (notified.mark(limit.packageName + ":over", date)) {
+                        val isLocked = limit.packageName in locked
                         notify(
                             context,
                             id = limit.packageName.hashCode(),
-                            title = "$name 今日已达限额",
-                            body = "已使用 ${DurationFormat.chinese(used)}，限额 ${DurationFormat.chinese(limit.limitMs)}。剩下的时间，留给别的吧。",
+                            title = if (isLocked) "$name 已锁定" else "$name 今日已达限额",
+                            body = if (isLocked) {
+                                "已使用 ${DurationFormat.chinese(used)}，限额 ${DurationFormat.chinese(limit.limitMs)}。" +
+                                    "再打开它需要输入解锁密码；次日零点自动解锁。"
+                            } else {
+                                "已使用 ${DurationFormat.chinese(used)}，限额 ${DurationFormat.chinese(limit.limitMs)}。剩下的时间，留给别的吧。"
+                            },
                         )
                     }
                 }
