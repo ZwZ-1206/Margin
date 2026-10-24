@@ -46,6 +46,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.2.12',
+    date: '2026-10-24',
+    status: 'released',
+    items: [
+      '<b>修复今日时长翻倍</b>：采集过程没有互斥、今日数据靠「旧值 + 新增」累加，首页、监控服务与后台任务同时采集时会把同一段时间记两遍（出现「20:47 已用 21 小时」）。改为互斥串行 + 今日从 0 点全量重算覆盖，重复采集不再叠加，已算错的数据也会自动修正',
+      '<b>时间环排版</b>：中央的今日时长改为「数字大、单位小」，超过一小时拆成两行，不再撑出圆环边界',
+    ],
+  },
+  {
     version: 'v1.2.11',
     date: '2026-10-20',
     status: 'released',

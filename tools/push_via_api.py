@@ -20,13 +20,15 @@ import urllib.request
 
 REPO = "ZwZ-1206/Margin"
 BASE = "https://api.github.com"
-PROXY = "http://127.0.0.1:51678"
 TOKEN = os.environ["GH_TOKEN"]
 BRANCH = "main"
 CWD = "C:/Code/Margin"
 
+# 默认直连；需要走代理时设 GIT_PROXY=http://127.0.0.1:PORT
+PROXY = os.environ.get("GIT_PROXY", "")
 opener = urllib.request.build_opener(
-    urllib.request.ProxyHandler({"http": PROXY, "https": PROXY})
+    urllib.request.ProxyHandler({"http": PROXY, "https": PROXY}) if PROXY
+    else urllib.request.ProxyHandler({})
 )
 
 

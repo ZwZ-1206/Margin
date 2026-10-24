@@ -59,6 +59,10 @@ interface UsageDao {
 
     @Query("DELETE FROM app_usage_daily WHERE date < :before")
     suspend fun purgeBefore(before: String)
+
+    /** 按天清空：当日数据改为「从 0 点全量重算后覆盖」，需要先删旧行 */
+    @Query("DELETE FROM app_usage_daily WHERE date = :date")
+    suspend fun deleteDay(date: String)
 }
 
 @Dao

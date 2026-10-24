@@ -134,11 +134,7 @@ fun HomeScreen(
                                 style = MaterialTheme.typography.labelMedium,
                                 color = extras.textTertiary,
                             )
-                            Text(
-                                state.screenTodayText,
-                                style = MaterialTheme.typography.displayMedium,
-                                color = extras.textPrimary,
-                            )
+                            RingTimeValue(state.screenTodayMs)
                             Text(
                                 "目标 ${DurationFormat.chinese(state.dailyGoalMin * 60_000L)}",
                                 style = MaterialTheme.typography.labelMedium,
@@ -287,3 +283,47 @@ private fun android.graphics.drawable.Drawable.toBitmapOrNull(): androidx.compos
         draw(canvas)
         bmp.asImageBitmap()
     }.getOrNull()
+
+/**
+ * 时间环中央的今日时长。
+ *
+ * 原来直接把「21 小时 45 分钟」塞进一个 displayMedium 文本，十来个字符远超
+ * 216dp 圆环的内径，会横向溢出到环外。改成数字大、单位小，超过一小时时
+ * 小时与分钟分两行——数字最多三位，宽度天然受控。
+ */
+@Composable
+private fun RingTimeValue(totalMs: Long) {
+    val extras = LocalExtraColors.current
+    val totalMin = (totalMs / 60_000L).coerceAtLeast(0L)
+    val hours = totalMin / 60
+    val minutes = totalMin % 60
+
+    @Composable
+    fun NumberWithUnit(value: Long, unit: String, big: Boolean) {
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                "$value",
+                style = if (big) MaterialTheme.typography.displayMedium
+                else MaterialTheme.typography.headlineMedium,
+                color = extras.textPrimary,
+            )
+            Text(
+                unit,
+                style = if (big) MaterialTheme.typography.titleMedium
+                else MaterialTheme.typography.labelLarge,
+                color = extras.textPrimary,
+                modifier = Modifier.padding(
+                    start = 2.dp,
+                    bottom = if (big) 10.dp else 5.dp,
+                ),
+            )
+        }
+    }
+
+    if (hours > 0) {
+        NumberWithUnit(hours, "小时", big = true)
+        NumberWithUnit(minutes, "分钟", big = false)
+    } else {
+        NumberWithUnit(minutes, "分钟", big = true)
+    }
+}

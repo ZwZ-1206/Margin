@@ -1,15 +1,15 @@
 {
-  "version": "1.2.11",
-  "versionCode": 14,
+  "version": "1.2.12",
+  "versionCode": 15,
   "sizeMB": 3,
   "minAndroid": "Android 9.0",
   "targetAndroid": "Android 16",
-  "releaseDate": "2026-10-20",
-  "notes": "v1.2.11：设置页「关于」里的版本号此前是写死的 1.2.7，连发几版都显示同一个数字；改为读取安装包自身的版本号。另把关于页的官网域名改为真实可访问的地址。本版同时包含 v1.2.10 的应用内更新修复（此前下载到网页导致「安装包已损坏」）与二级页返回键。",
+  "releaseDate": "2026-10-24",
+  "notes": "v1.2.12：修复今日使用时长翻倍——采集过程没有互斥、今日数据靠「旧值 + 新增」累加，首页、监控服务与后台任务同时采集时会把同一段时间记两遍（出现「20:47 已用 21 小时」）。改为互斥串行 + 今日从 0 点全量重算覆盖，重复采集不再叠加，已算错的数据也会自动修正。另修正时间环中央文字排版，不再撑出圆环。",
   "apk": {
-    "url": "downloads/margin-1.2.11.apk",
-    "sha256": "6bbf06a4e14f516b1299cd53bec27ee7c2f1d0566422849fbaeea18e4b91266f",
-    "sizeBytes": 3164185
+    "url": "downloads/margin-1.2.12.apk",
+    "sha256": "949f3a435c63c11b9a3c5f7460f6325f8d086fecac33adc81dc2d923136ecfdf",
+    "sizeBytes": 3164196
   },
   "mirrors": [
     {
