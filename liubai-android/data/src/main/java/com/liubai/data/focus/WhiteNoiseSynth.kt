@@ -21,6 +21,10 @@ import kotlin.random.Random
  *     正反馈，几十毫秒内发散到满量程并持续削顶，听起来就是"炸麦"。
  *  2. 任何音色最终都要过软限幅，单个水滴/杯碟事件叠加也不该产生硬切方波。
  *  3. 起播必须淡入、停止必须先静音再释放，否则切音色有咔哒声。
+ *
+ * 雨声的「强度」(intensity, 0f..1f) 同时改变三层：嘶声增益、低频底噪、水滴密度，
+ * 由写入线程按 ~90ms 时间常数平滑后传入 Voice，拖滑块听不到台阶。
+ * 其他音色忽略该参数。
  */
 class WhiteNoiseSynth(private val sampleRate: Int = 44_100) {
 
@@ -32,6 +36,10 @@ class WhiteNoiseSynth(private val sampleRate: Int = 44_100) {
     /** 0f..1f，写入线程每帧做平滑，拖滑块不会有阶梯噪声 */
     @Volatile
     var volume: Float = 0.6f
+
+    /** 雨声强度 0f..1f，仅 Sound.RAIN 生效；同样在写入线程里平滑 */
+    @Volatile
+    var intensity: Float = 0.5f
 
     private var thread: Thread? = null
     private var track: AudioTrack? = null
@@ -104,14 +112,18 @@ class WhiteNoiseSynth(private val sampleRate: Int = 44_100) {
         val fadeStep = 1f / (sampleRate * 0.35f)
         var fade = 0f
         var smoothVol = volume.coerceIn(0f, 1f)
+        // 强度平滑比音量更慢（~90ms）：雨势变化像天气转变，不该有瞬跳
+        var smoothIntensity = intensity.coerceIn(0f, 1f)
 
         while (running && !Thread.currentThread().isInterrupted) {
             val targetVol = volume.coerceIn(0f, 1f)
+            val targetIntensity = intensity.coerceIn(0f, 1f)
             for (i in chunk.indices) {
                 if (fade < 1f) fade = min(1f, fade + fadeStep)
                 // 每帧向目标音量靠近，时间常数约 20ms，听感上无台阶
                 smoothVol += (targetVol - smoothVol) * 0.0011f
-                val s = voice.next()
+                smoothIntensity += (targetIntensity - smoothIntensity) * 0.00025f
+                val s = voice.next(smoothIntensity)
                 val shaped = tanh(s * 1.2f) * fade * smoothVol * HEADROOM
                 chunk[i] = (shaped.coerceIn(-1f, 1f) * Short.MAX_VALUE).toInt().toShort()
             }
@@ -144,6 +156,8 @@ class WhiteNoiseSynth(private val sampleRate: Int = 44_100) {
         private var lpLow = 0.0
         private var lpMid = 0.0
         private var lpHigh = 0.0
+        private var lpSizzle = 0.0
+        private var lpSizzle2 = 0.0
         private var brown = 0.0
 
         // LFO
@@ -161,11 +175,17 @@ class WhiteNoiseSynth(private val sampleRate: Int = 44_100) {
         private val aLow = coef(220.0)
         private val aMid = coef(900.0)
         private val aHigh = coef(4200.0)
+        /**
+         * 雨声嘶声的上沿：两级串联的 5kHz 一阶低通（-12dB/oct）。
+         * 单级只到 -6dB/oct，5kHz 以上仍剩大量白噪残差，那是旧版
+         * 「嘶——」的金属刺耳感的来源；两级才把 8kHz 以上压到可听水平以下。
+         */
+        private val aSizzle = coef(5000.0)
 
         private fun coef(fc: Double): Double =
             1.0 - exp(-2.0 * PI * fc / sr.toDouble())
 
-        fun next(): Float {
+        fun next(intensity: Float): Float {
             val w = rnd.nextDouble() * 2.0 - 1.0
 
             // leaky integrator：1/1.02 < 1，所以状态永不发散。
@@ -176,6 +196,8 @@ class WhiteNoiseSynth(private val sampleRate: Int = 44_100) {
             lpLow += aLow * (w - lpLow)
             lpMid += aMid * (w - lpMid)
             lpHigh += aHigh * (w - lpHigh)
+            lpSizzle += aSizzle * (w - lpSizzle)
+            lpSizzle2 += aSizzle * (lpSizzle - lpSizzle2)
 
             // 下面的系数都按 8 秒离线仿真实测过：各音色 RMS 落在 0.18–0.22，
             // 峰值基本不超过 1.0，软限幅只在极少数事件叠加时介入。
@@ -183,10 +205,19 @@ class WhiteNoiseSynth(private val sampleRate: Int = 44_100) {
                 Sound.BROWN -> brownN * 0.90
 
                 Sound.RAIN -> {
-                    // 雨声主体：900Hz 以上的白噪残差，再混一点低频底噪
-                    val hiss = (w - lpMid) * 0.36
-                    val body = brownN * 0.12
-                    body + hiss + drop()
+                    // 雨声频谱对齐真实录音：能量集中在 200Hz–5kHz，
+                    // 5kHz 以上 -12dB/oct 滚降。旧版直接用 900Hz 以上的
+                    // 全频段白噪残差，5k–22k 占掉六成能量，就是刺耳感的来源。
+                    lfoPhase += 2 * PI * 0.07 / sr
+                    if (lfoPhase > 2 * PI) lfoPhase -= 2 * PI
+                    // 雨势本身在缓慢呼吸，±12%
+                    val gust = 0.88 + 0.12 * sin(lfoPhase)
+                    val i = intensity.toDouble()
+                    // 900Hz–5kHz 带限嘶声：强度越高越密越厚
+                    val hiss = (lpSizzle2 - lpMid) * (0.75 + 0.88 * i) * gust
+                    // 低频底噪（远处落地的轰声），大雨略厚
+                    val body = brownN * (0.15 + 0.05 * i)
+                    body + hiss + drop(i)
                 }
 
                 Sound.STREAM -> {
@@ -231,21 +262,28 @@ class WhiteNoiseSynth(private val sampleRate: Int = 44_100) {
             return out.toFloat()
         }
 
-        /** 稀疏水滴：指数衰减的正弦猝发 */
-        private fun drop(): Double {
+        /**
+         * 稀疏水滴：指数衰减的正弦猝发，频率随强度上移、带下滑滑音。
+         * 强度同时控制密度（每秒几滴到十几滴）、音量与明亮度；
+         * 整体比旧版低一截、避开 4kHz 以上的尖叫区，叠加时才不刺耳。
+         */
+        private fun drop(intensity: Double): Double {
             if (eventCooldown > 0) {
                 eventCooldown--
-            } else if (rnd.nextDouble() < 0.00016) {
+            } else if (rnd.nextDouble() < 0.00005 + 0.00025 * intensity) {
                 eventEnv = 1.0
-                eventFreq = 1600.0 + rnd.nextDouble() * 2800.0
+                // 小雨低沉（800–2000Hz），大雨稍亮（800–3600Hz）
+                eventFreq = 800.0 + rnd.nextDouble() * (1200.0 + 1600.0 * intensity)
                 eventPhase = 0.0
-                eventDecay = 0.99965
-                eventCooldown = (sr * 0.05).toInt()
+                eventDecay = 0.9996
+                eventCooldown = (sr * 0.04).toInt()
             }
             if (eventEnv <= 0.0005) return 0.0
+            // 每样本下滑约半个音/秒级，水滴余振往下掉，比纯定频正弦自然
+            eventFreq *= 0.99996
             eventPhase += 2 * PI * eventFreq / sr
             if (eventPhase > 2 * PI) eventPhase -= 2 * PI
-            val s = sin(eventPhase) * eventEnv * 0.10
+            val s = sin(eventPhase) * eventEnv * (0.03 + 0.05 * intensity)
             eventEnv *= eventDecay
             return s
         }

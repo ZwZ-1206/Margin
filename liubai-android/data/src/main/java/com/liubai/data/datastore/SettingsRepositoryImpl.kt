@@ -35,6 +35,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         val PRECISE = booleanPreferencesKey("precise_monitor")
         val NOISE = stringPreferencesKey("white_noise")
         val VOLUME = intPreferencesKey("white_noise_volume")
+        val RAIN_INTENSITY = intPreferencesKey("rain_intensity")
         val SPONSOR_QR = stringPreferencesKey("sponsor_qr_path")
         val CH_CONTINUOUS_ON = booleanPreferencesKey("ch_continuous_on")
         val CH_CONTINUOUS_MIN = intPreferencesKey("ch_continuous_min")
@@ -64,6 +65,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             preciseMonitor = p[Keys.PRECISE] ?: false,
             whiteNoise = p[Keys.NOISE],
             whiteNoiseVolume = p[Keys.VOLUME] ?: 60,
+            rainIntensity = p[Keys.RAIN_INTENSITY] ?: 50,
             sponsorQrPath = p[Keys.SPONSOR_QR],
             challenge = ChallengeConfig(
                 continuousEnabled = p[Keys.CH_CONTINUOUS_ON] ?: false,
@@ -96,6 +98,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             p[Keys.PRECISE] = next.preciseMonitor
             next.whiteNoise?.let { p[Keys.NOISE] = it } ?: p.remove(Keys.NOISE)
             p[Keys.VOLUME] = next.whiteNoiseVolume
+            p[Keys.RAIN_INTENSITY] = next.rainIntensity
             next.sponsorQrPath?.let { p[Keys.SPONSOR_QR] = it } ?: p.remove(Keys.SPONSOR_QR)
             p[Keys.CH_CONTINUOUS_ON] = next.challenge.continuousEnabled
             p[Keys.CH_CONTINUOUS_MIN] = next.challenge.continuousMin

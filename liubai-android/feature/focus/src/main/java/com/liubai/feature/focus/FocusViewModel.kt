@@ -125,16 +125,24 @@ class FocusViewModel : ViewModel() {
     /** 选择音色：立即预览播放，并持久化 */
     fun setNoise(context: Context, key: String?) {
         val volume = (uiState.value.settings.whiteNoiseVolume / 100f).coerceIn(0f, 1f)
+        val intensity = (uiState.value.settings.rainIntensity / 100f).coerceIn(0f, 1f)
         viewModelScope.launch {
             settingsRepo.update { it.copy(whiteNoise = key) }
         }
-        SoundController.play(context, key, volume)
+        SoundController.play(context, key, volume, intensity)
     }
 
     fun setVolume(volume: Int) {
         val v = volume.coerceIn(0, 100)
         viewModelScope.launch { settingsRepo.update { it.copy(whiteNoiseVolume = v) } }
         SoundController.applyVolume(v / 100f)
+    }
+
+    /** 雨声强度：实时生效（合成线程内平滑），并持久化供下次专注使用 */
+    fun setRainIntensity(value: Int) {
+        val v = value.coerceIn(0, 100)
+        viewModelScope.launch { settingsRepo.update { it.copy(rainIntensity = v) } }
+        SoundController.applyIntensity(v / 100f)
     }
 
     fun refreshCustomSounds(context: Context) {

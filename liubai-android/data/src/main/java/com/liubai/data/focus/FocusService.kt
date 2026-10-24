@@ -49,6 +49,7 @@ class FocusService : Service() {
         const val EXTRA_COUNTDOWN_MIN = "countdownMin"
         const val EXTRA_NOISE = "noise"
         const val EXTRA_VOLUME = "volume"
+        const val EXTRA_RAIN_INTENSITY = "rain_intensity"
 
         private const val ALARM_REQUEST = 2001
 
@@ -140,7 +141,8 @@ class FocusService : Service() {
     private fun handleNoise(intent: Intent) {
         val key = intent.getStringExtra(EXTRA_NOISE)
         val volume = intent.getIntExtra(EXTRA_VOLUME, 60) / 100f
-        SoundController.play(this, key, volume)
+        val intensity = intent.getIntExtra(EXTRA_RAIN_INTENSITY, 50) / 100f
+        SoundController.play(this, key, volume, intensity)
     }
 
     /** 进程重建：加载断点、推进引擎、恢复通知 */
@@ -214,6 +216,7 @@ class FocusService : Service() {
                 this@FocusService,
                 settings.whiteNoise,
                 (settings.whiteNoiseVolume / 100f).coerceIn(0f, 1f),
+                (settings.rainIntensity / 100f).coerceIn(0f, 1f),
             )
         }
     }

@@ -18,14 +18,22 @@ object SoundController {
     private var player: MediaPlayer? = null
     private var currentKey: String? = null
 
+    /**
+     * 雨声强度 0f..1f。只对内置雨声生效，其他音色忽略；
+     * 切音色时随 play() 一起下发，进程内保持上次的值。
+     */
+    @Volatile
+    private var intensity = 0.5f
+
     /** 音色标识：BUILTIN:RAIN 或 FILE:rain.mp3 */
     fun keyOfBuiltin(sound: WhiteNoiseSynth.Sound) = "BUILTIN:${sound.name}"
     fun keyOfFile(fileName: String) = "FILE:$fileName"
 
     val isPlaying: Boolean get() = currentKey != null
 
-    /** 播放指定音色；[volume] 0f..1f */
-    fun play(context: Context, key: String?, volume: Float) {
+    /** 播放指定音色；[volume] 0f..1f，[intensity] 0f..1f（仅内置雨声） */
+    fun play(context: Context, key: String?, volume: Float, intensity: Float = this.intensity) {
+        this.intensity = intensity.coerceIn(0f, 1f)
         if (key == null) {
             stop()
             return
@@ -41,6 +49,7 @@ object SoundController {
             val name = key.removePrefix("BUILTIN:")
             val sound = runCatching { WhiteNoiseSynth.Sound.valueOf(name) }.getOrNull() ?: return
             synth.volume = volume.coerceIn(0f, 1f)
+            synth.intensity = this.intensity
             synth.start(sound)
         } else {
             val fileName = key.removePrefix("FILE:")
@@ -65,6 +74,12 @@ object SoundController {
         val v = volume.coerceIn(0f, 1f)
         synth.volume = v
         runCatching { player?.setVolume(v, v) }
+    }
+
+    /** 实时调节雨声强度，合成线程内平滑，无台阶 */
+    fun applyIntensity(value: Float) {
+        intensity = value.coerceIn(0f, 1f)
+        synth.intensity = intensity
     }
 
     fun stop() {

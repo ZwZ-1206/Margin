@@ -46,6 +46,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.2.13',
+    date: '2026-10-24',
+    status: 'released',
+    items: [
+      '<b>雨声音色重做</b>：旧版嘶声是 900Hz 以上的全频段白噪，5kHz 以上占掉六成能量，久听发刺。改为 900Hz–5kHz 带限（两级 5kHz 低通，-12dB/oct 滚降）+ 更厚的低频底噪 + 随强度变化的水滴层，整体柔和自然，实测 8kHz 以上能量减少约六成',
+      '<b>新增雨声强度滑块</b>：选中内置「雨声」后，可实时拖动调节雨的疏密与轻重（小雨到暴雨四档提示），设置会被记住，下次专注自动套用',
+    ],
+  },
+  {
     version: 'v1.2.12',
     date: '2026-10-24',
     status: 'released',

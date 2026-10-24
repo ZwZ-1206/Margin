@@ -405,6 +405,33 @@ fun FocusScreen(
                             color = extras.textTertiary,
                         )
                     }
+
+                    // 雨声强度：只有选中内置「雨声」时才出现，拖动实时改变雨的疏密轻重
+                    if (state.settings.whiteNoise == vm.builtinKey(WhiteNoiseSynth.Sound.RAIN)) {
+                        Spacer(Modifier.height(4.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                "雨声强度",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = extras.textSecondary,
+                            )
+                            Slider(
+                                value = state.settings.rainIntensity / 100f,
+                                onValueChange = { vm.setRainIntensity((it * 100).toInt()) },
+                                modifier = Modifier.weight(1f),
+                            )
+                            Text(
+                                "${state.settings.rainIntensity}%",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = extras.textTertiary,
+                            )
+                        }
+                        Text(
+                            rainIntensityHint(state.settings.rainIntensity),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = extras.textTertiary,
+                        )
+                    }
                     if (state.settings.whiteNoise == null) {
                         Text(
                             "选择上方任一音色即可试听，音量调节随时可用",
@@ -610,6 +637,14 @@ private fun builtinLabel(sound: WhiteNoiseSynth.Sound): String = when (sound) {
     WhiteNoiseSynth.Sound.OCEAN -> "海浪"
     WhiteNoiseSynth.Sound.CAFE -> "咖啡馆"
     WhiteNoiseSynth.Sound.BROWN -> "棕噪音"
+}
+
+/** 雨声强度的口语化描述，0–100 → 小雨/中雨/大雨 */
+private fun rainIntensityHint(value: Int): String = when {
+    value < 25 -> "小雨：稀疏柔和，适合助眠"
+    value < 60 -> "中雨：疏密适中，最接近自然雨夜"
+    value < 85 -> "大雨：密集厚实，掩蔽环境噪音更强"
+    else -> "暴雨：非常密集，盖住绝大多数外界声响"
 }
 
 @Composable

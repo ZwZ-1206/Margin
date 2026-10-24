@@ -103,6 +103,8 @@ data class AppSettings(
     val preciseMonitor: Boolean = false,
     val whiteNoise: String? = null,
     val whiteNoiseVolume: Int = 60,
+    /** 雨声强度 0–100，仅内置「雨声」音色生效：越高雨越密、水滴越多 */
+    val rainIntensity: Int = 50,
     /** 赞助收款码图片路径（filesDir 内相对路径，null = 未上传） */
     val sponsorQrPath: String? = null,
     val challenge: ChallengeConfig = ChallengeConfig(),
