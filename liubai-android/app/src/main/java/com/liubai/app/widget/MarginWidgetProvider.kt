@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 /**
  * 桌面小部件：RemoteViews 实现（无额外依赖）。
@@ -31,6 +32,11 @@ import kotlinx.coroutines.launch
 open class MarginWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        // 绑定窗口期：ColorOS 等厂商桌面在 bindAppWidgetId 后会等 provider 回传可渲染的
+        // RemoteViews，等不到（或等太久）就弹「载入窗口小部件时出现问题」。取数要走 IO +
+        // PackageManager，冷启动可能要数秒，因此这里先用同步动作推一份占位内容
+        // （initialLayout 的默认态，零 IO），保证桌面瞬间拿到东西，再异步补真实数据。
+        pushPlaceholder(context, appWidgetManager, appWidgetIds)
         updateAll(context)
     }
 
@@ -41,14 +47,36 @@ open class MarginWidgetProvider : AppWidgetProvider() {
         /** 共用一个受监督的 scope，避免每次广播都新建且异常逃逸到线程默认处理器 */
         private val widgetScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+        /** 重数据（TOP 3 图标）取数超时上限：超时就保持轻量版，绝不拖住桌面 */
+        private const val TOP_TIMEOUT_MS = 2_500L
+
+        /** 本 provider 对应的布局（占位推送用，零 IO） */
+        private fun layoutId(provider: Any): Int = when (provider) {
+            is MarginWidgetMediumProvider -> com.liubai.app.R.layout.widget_medium
+            is MarginWidgetLargeProvider -> com.liubai.app.R.layout.widget_large
+            else -> com.liubai.app.R.layout.widget_small
+        }
+
+        private fun pushPlaceholder(
+            context: Context,
+            mgr: AppWidgetManager,
+            ids: IntArray,
+        ) {
+            val pkg = context.packageName
+            val layout = layoutId(context)
+            ids.forEach { id ->
+                runCatching { mgr.updateAppWidget(id, RemoteViews(pkg, layout)) }
+            }
+        }
+
         fun updateAll(context: Context) {
             val app = context.applicationContext
             widgetScope.launch {
                 runCatching {
-                    // 取数失败也要继续：至少把 initialLayout（占位数据）推上桌面
-                    val data = runCatching { WidgetData.snapshot(app) }.getOrNull()
                     val mgr = runCatching { AppWidgetManager.getInstance(app) }.getOrNull()
                         ?: return@runCatching
+                    // 轻量数据（三个尺寸共用）：只读 Room + 使用情况，不含图标
+                    val data = runCatching { WidgetData.snapshot(app) }.getOrNull()
                     providers(app).forEach { (provider, layoutId) ->
                         val ids = runCatching { mgr.getAppWidgetIds(provider) }.getOrNull()
                         if (ids == null || ids.isEmpty()) return@forEach
@@ -61,6 +89,25 @@ open class MarginWidgetProvider : AppWidgetProvider() {
                         // 会直接拖垮 App 进程，必须逐个兜住
                         ids.forEach { id ->
                             runCatching { mgr.updateAppWidget(id, views) }
+                        }
+                    }
+                    // 重数据（仅 4x3 大部件）：TOP 3 图标要走 PackageManager，慢，
+                    // 单独一条路径 + 超时保护，失败就保持轻量版，不影响其他尺寸
+                    val largeProvider = providers(app).last().first
+                    val largeIds = runCatching { mgr.getAppWidgetIds(largeProvider) }.getOrNull()
+                    if (largeIds != null && largeIds.isNotEmpty()) {
+                        val withTop = runCatching {
+                            withTimeout(TOP_TIMEOUT_MS) { WidgetData.snapshotWithTop(app) }
+                        }.getOrNull()
+                        if (withTop != null) {
+                            val largeViews = runCatching {
+                                build(app, com.liubai.app.R.layout.widget_large, withTop)
+                            }.getOrNull()
+                            if (largeViews != null) {
+                                largeIds.forEach { id ->
+                                    runCatching { mgr.updateAppWidget(id, largeViews) }
+                                }
+                            }
                         }
                     }
                 }

@@ -1,15 +1,15 @@
 {
-  "version": "1.2.17",
-  "versionCode": 20,
+  "version": "1.2.18",
+  "versionCode": 21,
   "sizeMB": 3.6,
   "minAndroid": "Android 9.0",
   "targetAndroid": "Android 16",
   "releaseDate": "2026-10-25",
-  "notes": "v1.2.17：修复 OPPO / ColorOS 等 OEM 桌面添加小组件时提示「载入窗口小部件时出现问题」的问题。v1.2.16 只修了大尺寸部件的主题属性样式，但在该类机型上三个尺寸仍无法添加。本次把三个部件的布局全部退回到最保守的构造集——只用 RemoteViews 官方支持的 View（LinearLayout / TextView / View / ImageView）与 API 1 属性（显式 marginTop/Bottom/Start/End），并去掉预览布局 previewLayout、改为静态位图预览：桌面选择器只解码图片，不会在启动器进程里 inflate 我们的布局。大部件 TOP 3 占比条从 ProgressBar 改为 ImageView + ClipDrawable；部件更新链路全面加固，取数/构建/推送任何一步失败都只降级为占位布局，App 进程不再可能在绑定窗口期崩溃。注意：已经加到桌面的部件不会自愈，更新后请删掉旧的「留白」部件再重新添加。",
+  "notes": "v1.2.18：继续修复 OPPO / ColorOS 等 OEM 桌面添加小组件时提示「载入窗口小部件时出现问题」。前两个版本改的是布局语法，但实际根因在绑定窗口期：厂商桌面在添加部件后会等待应用回传可渲染内容，而原先取数（v1.2.15 起新增的 TOP 3 图标加载，要走 PackageManager）可能耗时数秒，桌面等不及就报错。本次改为：添加部件的瞬间先用零 IO 的占位内容同步上桌面，真实数据异步补上；2×2 与 4×1 只读轻量数据，不再白付图标开销；仅 4×3 单独加载 TOP 3，并加 2.5 秒超时保护，失败也保持可用。注意：已经加到桌面的部件不会自愈，更新后请删掉旧的「留白」部件再重新添加。",
   "apk": {
-    "url": "downloads/margin-1.2.17.apk",
-    "sha256": "b7a0a31a86e272b9659779ef889c8c040df237d684872acb796c06ddf5ddceb9",
-    "sizeBytes": 3805152
+    "url": "downloads/margin-1.2.18.apk",
+    "sha256": "bc479c629b70c688a05accd1bd3dcbc85767017b362e658aabe341a4c3b4a706",
+    "sizeBytes": 3805148
   },
   "mirrors": [
     {
