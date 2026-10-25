@@ -41,7 +41,8 @@ open class MarginWidgetProvider : AppWidgetProvider() {
                 providers(app).forEach { (provider, layoutId) ->
                     val ids = mgr.getAppWidgetIds(provider)
                     if (ids.isEmpty()) return@forEach
-                    val views = build(app, layoutId, data)
+                    // 单个部件的 RemoteViews 构建失败不能拖垮其他部件
+                    val views = runCatching { build(app, layoutId, data) }.getOrNull() ?: return@forEach
                     ids.forEach { id -> mgr.updateAppWidget(id, views) }
                 }
             }

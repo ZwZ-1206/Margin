@@ -130,7 +130,7 @@
 
         <ProgressBar
             android:id="@+id/top_bar_1"
-            style="?android:attr/progressBarStyleHorizontal"
+            style="@android:style/Widget.ProgressBar.Horizontal"
             android:layout_width="44dp"
             android:layout_height="4dp"
             android:max="100"
@@ -176,7 +176,7 @@
 
         <ProgressBar
             android:id="@+id/top_bar_2"
-            style="?android:attr/progressBarStyleHorizontal"
+            style="@android:style/Widget.ProgressBar.Horizontal"
             android:layout_width="44dp"
             android:layout_height="4dp"
             android:max="100"
@@ -222,7 +222,7 @@
 
         <ProgressBar
             android:id="@+id/top_bar_3"
-            style="?android:attr/progressBarStyleHorizontal"
+            style="@android:style/Widget.ProgressBar.Horizontal"
             android:layout_width="44dp"
             android:layout_height="4dp"
             android:max="100"

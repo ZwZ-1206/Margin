@@ -46,6 +46,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.2.16',
+    date: '2026-10-25',
+    status: 'released',
+    items: [
+      '<b>修复新大尺寸小组件无法添加</b>：部分机型（小米 / HyperOS 等）在添加 4×3「使用排行」部件时提示「载入小组件时出现问题」。原因是布局里用了主题属性样式 <code>?android:attr/progressBarStyleHorizontal</code>，而小组件布局是在桌面启动器的主题里 inflated 的，OEM 自定义主题解析不了它。改为显式的平台样式；同时给部件更新加了隔离——单个部件出问题不再影响其他部件。已经加上去的坏部件需要删掉重新添加',
+    ],
+  },
+  {
     version: 'v1.2.15',
     date: '2026-10-25',
     status: 'released',
