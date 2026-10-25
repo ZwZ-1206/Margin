@@ -22,7 +22,7 @@
             android:textStyle="bold" android:textColor="#1B1915" />
     </LinearLayout>
 
-    <View
+    <ImageView
         android:layout_width="1dp"
         android:layout_height="30dp"
         android:layout_marginStart="10dp"

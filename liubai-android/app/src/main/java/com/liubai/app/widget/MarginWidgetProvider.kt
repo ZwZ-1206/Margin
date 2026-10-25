@@ -32,60 +32,14 @@ import kotlinx.coroutines.withTimeout
 open class MarginWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        // 【诊断版 v1.2.19】不推真实数据，只把执行链路与真实异常显示在卡片上。
-        // 三种结果对应三种根因：
-        //   A. 卡片显示 "DIAG-PENDING"        → 系统根本没调用 onUpdate（桌面侧/自启动限制）
-        //   B. 卡片显示 DIAG 文本/REACHABLE   → RemoteViews 通路正常，问题在取数或内容
-        //   C. 卡片仍是「载入窗口小部件…」    → initialLayout 在桌面进程 inflate 失败
-        diagPush(context, appWidgetManager, appWidgetIds)
+        // 绑定窗口期：厂商桌面 bindAppWidgetId 后会等 provider 回传可渲染的 RemoteViews，
+        // 等不到（或等太久）就报「载入窗口小部件时出现问题」。取数要走 IO，冷启动可能数秒，
+        // 因此先用同步动作推一份零 IO 的占位内容，保证桌面瞬间拿到东西，再异步补真实数据。
+        pushPlaceholder(context, appWidgetManager, appWidgetIds)
+        updateAll(context)
     }
 
-    override fun onEnabled(context: Context) {
-        diagLog(context, "onEnabled called")
-    }
-
-    override fun onDisabled(context: Context) {
-        diagLog(context, "onDisabled called")
-    }
-
-    /** 诊断：把执行情况推到卡片上，并同时落盘（adb pull 可取） */
-    private fun diagPush(context: Context, mgr: AppWidgetManager, ids: IntArray) {
-        val sb = StringBuilder()
-        sb.append("DIAG 1.2.19\n")
-        sb.append("onUpdate ids=${ids.size} first=${ids.firstOrNull()}\n")
-        sb.append("pkg=${context.packageName}\n")
-        var reachable = false
-        if (ids.isNotEmpty()) {
-            runCatching {
-                val v = RemoteViews(context.packageName, com.liubai.app.R.layout.widget_small)
-                v.setTextViewText(com.liubai.app.R.id.widget_screen, "REACHABLE-OK")
-                mgr.updateAppWidget(ids[0], v)
-                reachable = true
-            }.onFailure { e ->
-                sb.append("PUSH1-FAIL\n${e.javaClass.name}: ${e.message}\n")
-                e.stackTrace.take(8).forEach { sb.append("  at $it\n") }
-            }
-        }
-        sb.append("reachable=$reachable\n")
-        if (ids.isNotEmpty()) {
-            runCatching {
-                val v = RemoteViews(context.packageName, com.liubai.app.R.layout.widget_small)
-                v.setTextViewText(com.liubai.app.R.id.widget_screen, sb.toString().trim())
-                mgr.updateAppWidget(ids[0], v)
-            }.onFailure { e ->
-                sb.append("PUSH2-FAIL ${e.javaClass.name}: ${e.message}\n")
-            }
-        }
-        diagLog(context, sb.toString())
-    }
-
-    private fun diagLog(context: Context, text: String) {
-        runCatching {
-            val dir = context.getExternalFilesDir(null) ?: return
-            java.io.File(dir, "widget_diag.log")
-                .appendText("${text}\n----\n")
-        }
-    }
+    override fun onEnabled(context: Context) = updateAll(context)
 
     companion object {
 

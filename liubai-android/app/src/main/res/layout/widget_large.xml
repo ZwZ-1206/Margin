@@ -25,7 +25,7 @@
             android:textStyle="bold"
             android:textColor="#8A8272" />
 
-        <View
+        <ImageView
             android:layout_width="0dp"
             android:layout_height="1dp"
             android:layout_weight="1" />
@@ -64,7 +64,7 @@
             android:textSize="12sp"
             android:textColor="#6E675C" />
 
-        <View
+        <ImageView
             android:layout_width="0dp"
             android:layout_height="1dp"
             android:layout_weight="1" />
@@ -79,7 +79,7 @@
             android:textColor="#0A7A61" />
     </LinearLayout>
 
-    <View
+    <ImageView
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="10dp"

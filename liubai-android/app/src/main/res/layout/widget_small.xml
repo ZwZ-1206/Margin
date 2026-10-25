@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 2x2 小部件：今日屏幕 + 专注时长（拿起次数收进头部）
-     兼容性约束：仅用 RemoteViews 官方支持的 View 与 API 1 属性，不依赖启动器主题 -->
+     兼容性约束（2026-10-25 实测踩坑，Android 17 / ColorOS）：
+     1. 布局在桌面启动器进程里 inflate，那里有 View 类白名单，
+        **普通 <View> 会抛 "Class not allowed to be inflated" 直接导致
+        「载入窗口小部件时出现问题」**——分隔线一律用 ImageView + background；
+     2. 仅用 RemoteViews 官方支持的 View：LinearLayout / TextView / ImageView；
+     3. 不用 previewLayout、不用主题属性样式、只用 API 1 就有的属性。 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/background"
     android:layout_width="match_parent"
@@ -40,7 +45,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="DIAG-PENDING"
+        android:text="0 分钟"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="#1B1915" />
@@ -52,7 +57,7 @@
         android:textSize="10sp"
         android:textColor="#6E675C" />
 
-    <View
+    <ImageView
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="7dp"
