@@ -24,7 +24,7 @@ object WidgetData {
         val screenMs: Long,
         val focusMs: Long,
         val pickups: Int,
-        /** 今日使用时长 TOP 3（已排除留白自身，按耗时降序） */
+        /** 今日使用时长 TOP 5（已排除留白自身，按耗时降序） */
         val topApps: List<TopApp> = emptyList(),
     )
 
@@ -39,7 +39,7 @@ object WidgetData {
      * 图标加载走 PackageManager，冷启动可能要数百毫秒到数秒，
      * 因此与轻量路径分离，调用方应自行加超时保护。
      */
-    suspend fun snapshotWithTop(context: Context, n: Int = 3): Snapshot {
+    suspend fun snapshotWithTop(context: Context, n: Int = 5): Snapshot {
         val b = base(context)
         return b.toSnapshot(topApps(context, b.rows, n))
     }

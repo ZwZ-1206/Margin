@@ -19,7 +19,7 @@ const IconRefresh = ({ size = 24 }: { size?: number }) => (
   </svg>
 );
 
-/** TOP 3 单行：图标 + 名称 + 时长 + 相对第一名的占比条 */
+/** TOP 5 单行：图标 + 名称 + 时长 + 相对第一名的占比条 */
 function TopRow({ tone, label, time, pct }: { tone: string; label: string; time: string; pct: number }) {
   return (
     <div className="wg-row">
@@ -49,7 +49,7 @@ export function WidgetShowcase() {
             <div
               className="wgt wgt-lg"
               role="img"
-              aria-label="大尺寸小组件（4×3）：今日屏幕 3 小时 42 分，专注 1 小时 12 分，今日拿起 23 次；使用时长前三名：短视频 1 小时 48 分、社交 52 分钟、阅读 31 分钟"
+              aria-label="大尺寸小组件（4×3）：今日屏幕 3 小时 42 分，专注 1 小时 12 分，今日拿起 23 次；使用时长前五名：短视频 1 小时 48 分、社交 52 分钟、阅读 31 分钟、购物 18 分钟、音乐 9 分钟"
             >
               <div className="wg-head">
                 <span className="wg-brand">「留白」</span>
@@ -61,10 +61,12 @@ export function WidgetShowcase() {
                 <span className="wg-focus">专注 1小时12分</span>
               </div>
               <div className="wg-div" />
-              <span className="wg-top-lbl">使用时长 TOP 3</span>
+              <span className="wg-top-lbl">使用时长 TOP 5</span>
               <TopRow tone="#D6568A" label="短视频" time="1小时48分" pct={100} />
               <TopRow tone="#3E63DD" label="社交" time="52分钟" pct={48} />
               <TopRow tone="#7C6BD9" label="阅读" time="31分钟" pct={28} />
+              <TopRow tone="#E0913A" label="购物" time="18分钟" pct={16} />
+              <TopRow tone="#3F9E52" label="音乐" time="9分钟" pct={8} />
             </div>
             <figcaption>4×3 · 使用排行</figcaption>
           </figure>
@@ -125,8 +127,8 @@ export function WidgetShowcase() {
           <div className="card widget-point">
             <span className="fic"><ICONS.chart size={22} /></span>
             <div>
-              <b>使用时长 TOP 3</b>
-              <span>大部件排出今天耗时最多的三个应用，占比条一眼看出谁是时间黑洞。</span>
+              <b>使用时长 TOP 5</b>
+              <span>大部件排出今天耗时最多的五个应用，占比条一眼看出谁是时间黑洞。</span>
             </div>
           </div>
           <div className="card widget-point">

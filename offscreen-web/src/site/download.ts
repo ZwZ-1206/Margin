@@ -16,13 +16,13 @@ export interface ReleaseInfo {
 
 /** 与 public/downloads/version.json 同步的内置回退值（静态部署时接口不可用时展示） */
 export const FALLBACK_RELEASE: ReleaseInfo = {
-  version: '1.2.20',
-  versionCode: 23,
-  sizeMB: 3.7,
+  version: '1.2.21',
+  versionCode: 24,
+  sizeMB: 3.6,
   minAndroid: 'Android 9.0',
   targetAndroid: 'Android 16',
   releaseDate: '2026-10-25',
-  notes: '真正修复 OPPO / ColorOS 等 OEM 桌面添加小组件时提示「载入窗口小部件时出现问题」：根因是布局里用普通 android.view.View 做分隔线，而桌面启动器进程的 View 类白名单不允许它 inflate。已改为 ImageView，视觉不变。更新后请删掉旧部件重新添加。',
+  notes: '4×3 大部件的使用排行从 TOP 3 扩充到 TOP 5：一次排满今日耗时最多的五个应用（图标、时长、相对第一名的占比条），第 4、5 行同样可点击直接打开对应应用；图标取数超时放宽到 4 秒，超时仍只降级为「无排行」，部件照常可用。更新后请删掉桌面上旧的「留白」大部件再重新添加。',
   apk: { url: '', sha256: '', sizeBytes: 0 },
   mirrors: [
     { name: 'GitHub Releases', url: 'https://github.com/ZwZ-1206/Margin/releases/latest', note: '国际线路备用' },

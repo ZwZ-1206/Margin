@@ -18,7 +18,7 @@ import kotlinx.coroutines.withTimeout
 
 /**
  * 桌面小部件：RemoteViews 实现（无额外依赖）。
- * 小 2x2（屏幕/专注）、中 4x1（屏幕/专注/拿起）、大 4x3（概览 + 使用时长 TOP 3）。
+ * 小 2x2（屏幕/专注）、中 4x1（屏幕/专注/拿起）、大 4x3（概览 + 使用时长 TOP 5）。
  *
  * 更新时机：系统定时（30 分钟）、App 打开、每次采集完成、开机、精确监控轮询。
  * 点击打开 App（用包管理器启动 Intent，避免 R8 混淆后类名找不到）；
@@ -46,8 +46,8 @@ open class MarginWidgetProvider : AppWidgetProvider() {
         /** 共用一个受监督的 scope，避免每次广播都新建且异常逃逸到线程默认处理器 */
         private val widgetScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-        /** 重数据（TOP 3 图标）取数超时上限：超时就保持轻量版，绝不拖住桌面 */
-        private const val TOP_TIMEOUT_MS = 2_500L
+        /** 重数据（TOP 5 图标）取数超时上限：超时就保持轻量版，绝不拖住桌面 */
+        private const val TOP_TIMEOUT_MS = 4_000L
 
         /** 本 provider 对应的布局（占位推送用，零 IO） */
         private fun layoutId(provider: Any): Int = when (provider) {
@@ -90,7 +90,7 @@ open class MarginWidgetProvider : AppWidgetProvider() {
                             runCatching { mgr.updateAppWidget(id, views) }
                         }
                     }
-                    // 重数据（仅 4x3 大部件）：TOP 3 图标要走 PackageManager，慢，
+                    // 重数据（仅 4x3 大部件）：TOP 5 图标要走 PackageManager，慢，
                     // 单独一条路径 + 超时保护，失败就保持轻量版，不影响其他尺寸
                     val largeProvider = providers(app).last().first
                     val largeIds = runCatching { mgr.getAppWidgetIds(largeProvider) }.getOrNull()
@@ -149,6 +149,20 @@ open class MarginWidgetProvider : AppWidgetProvider() {
                 com.liubai.app.R.id.top_time_3,
                 com.liubai.app.R.id.top_bar_3,
             ),
+            TopRow(
+                com.liubai.app.R.id.top_row_4,
+                com.liubai.app.R.id.top_icon_4,
+                com.liubai.app.R.id.top_name_4,
+                com.liubai.app.R.id.top_time_4,
+                com.liubai.app.R.id.top_bar_4,
+            ),
+            TopRow(
+                com.liubai.app.R.id.top_row_5,
+                com.liubai.app.R.id.top_icon_5,
+                com.liubai.app.R.id.top_name_5,
+                com.liubai.app.R.id.top_time_5,
+                com.liubai.app.R.id.top_bar_5,
+            ),
         )
 
         private fun build(context: Context, layoutId: Int, data: WidgetData.Snapshot): RemoteViews {
@@ -191,7 +205,7 @@ open class MarginWidgetProvider : AppWidgetProvider() {
             return views
         }
 
-        /** 大部件：填充 TOP 3，缺数据时显示空状态；点击应用行直达该应用 */
+        /** 大部件：填充 TOP 5，缺数据时显示空状态；点击应用行直达该应用 */
         private fun fillTopApps(context: Context, views: RemoteViews, data: WidgetData.Snapshot) {
             val top = data.topApps
             val leader = top.firstOrNull()?.totalMs ?: 0L
@@ -240,5 +254,5 @@ open class MarginWidgetProvider : AppWidgetProvider() {
 /** 中尺寸（4x1）小部件，与小尺寸共用更新逻辑 */
 class MarginWidgetMediumProvider : MarginWidgetProvider()
 
-/** 大尺寸（4x3）小部件：概览 + 使用时长 TOP 3 */
+/** 大尺寸（4x3）小部件：概览 + 使用时长 TOP 5 */
 class MarginWidgetLargeProvider : MarginWidgetProvider()

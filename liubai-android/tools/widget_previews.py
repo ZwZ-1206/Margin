@@ -71,35 +71,37 @@ save(img, "widget_preview_medium.png")
 # ---------- 4x3 大 ----------
 W, H, R = 600, 450, 34
 img, d = card(W, H, R)
-d.text((32, 30), "「留白」", font=font(24, True), fill=BRAND)
+d.text((32, 26), "「留白」", font=font(22, True), fill=BRAND)
 pickup = "今日拿起 32 次"
-pw = d.textlength(pickup, font=font(22))
-d.text((W - 32 - pw, 32), pickup, font=font(22), fill=MUTE)
-d.text((32, 76), "2 小时 15 分钟", font=font(58, True), fill=INK)
-d.text((32 + d.textlength("2 小时 15 分钟", font=font(58, True)) + 12, 118),
-       "今日屏幕", font=font(23), fill=MUTE)
-d.text((W - 32 - d.textlength("专注 45 分钟", font=font(23, True)), 116),
-       "专注 45 分钟", font=font(23, True), fill=GREEN)
-d.line([32, 168, W - 32, 168], fill=BORDER, width=2)
-d.text((32, 184), "使用时长 TOP 3", font=font(22), fill=MUTE)
+pw = d.textlength(pickup, font=font(21))
+d.text((W - 32 - pw, 28), pickup, font=font(21), fill=MUTE)
+d.text((32, 66), "2 小时 15 分钟", font=font(52, True), fill=INK)
+d.text((32 + d.textlength("2 小时 15 分钟", font=font(52, True)) + 12, 104),
+       "今日屏幕", font=font(21), fill=MUTE)
+d.text((W - 32 - d.textlength("专注 45 分钟", font=font(21, True)), 102),
+       "专注 45 分钟", font=font(21, True), fill=GREEN)
+d.line([32, 146, W - 32, 146], fill=BORDER, width=2)
+d.text((32, 160), "使用时长 TOP 5", font=font(20), fill=MUTE)
 
 rows = [("短视频", "1 小时 12 分钟", GREEN, 1.0),
         ("社交", "48 分钟", GRAY, 0.62),
-        ("浏览器", "21 分钟", GRAY, 0.3)]
-y = 228
+        ("浏览器", "21 分钟", GRAY, 0.3),
+        ("购物", "12 分钟", GRAY, 0.18),
+        ("音乐", "6 分钟", GRAY, 0.09)]
+y = 196
 for name, dur, color, ratio in rows:
     # 图标占位（圆角方块）
-    d.rounded_rectangle([32, y + 2, 84, y + 54], radius=12,
+    d.rounded_rectangle([32, y + 1, 66, y + 35], radius=10,
                         fill=(214, 208, 196), outline=BORDER, width=2)
-    d.text((98, y + 4), name, font=font(26), fill=INK)
-    tw = d.textlength(dur, font=font(24))
-    d.text((W - 32 - 110 - tw, y + 6), dur, font=font(24), fill=MUTE)
-    bar_x, bar_w, bar_h = W - 32 - 104, 104, 12
-    d.rounded_rectangle([bar_x, y + 20, bar_x + bar_w, y + 20 + bar_h],
-                        radius=6, fill=BORDER)
+    d.text((80, y + 5), name, font=font(22), fill=INK)
+    tw = d.textlength(dur, font=font(20))
+    d.text((W - 32 - 100 - tw, y + 6), dur, font=font(20), fill=MUTE)
+    bar_x, bar_w, bar_h = W - 32 - 96, 96, 10
+    d.rounded_rectangle([bar_x, y + 13, bar_x + bar_w, y + 13 + bar_h],
+                        radius=5, fill=BORDER)
     fill_w = max(6, int(bar_w * ratio))
-    d.rounded_rectangle([bar_x, y + 20, bar_x + fill_w, y + 20 + bar_h],
-                        radius=6, fill=color)
-    y += 76
+    d.rounded_rectangle([bar_x, y + 13, bar_x + fill_w, y + 13 + bar_h],
+                        radius=5, fill=color)
+    y += 48
 save(img, "widget_preview_large.png")
 print("done ->", OUT)
