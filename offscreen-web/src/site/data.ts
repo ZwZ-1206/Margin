@@ -57,6 +57,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.2.19',
+    date: '2026-10-25',
+    status: 'plan',
+    items: [
+      '<b>诊断版（临时构建，不含真实数据）</b>：v1.2.18 之后仍有 OPPO / ColorOS 用户反馈小组件无法载入。该版本把小组件的执行链路与真实异常直接显示在部件卡片上，用于定位根因',
+      '<b>卡片显示 DIAG-PENDING</b>：说明系统根本没有调用小组件的更新回调，问题在桌面侧或系统自启动限制',
+      '<b>卡片显示 DIAG 开头的执行信息</b>：说明更新链路正常，问题出在数据或内容构建',
+      '<b>卡片仍显示「载入窗口小部件时出现问题」</b>：说明布局在桌面进程里加载失败',
+      '定位到根因后将发布正式的修复版本，届时恢复全部正常功能',
+    ],
+  },
+  {
     version: 'v1.2.18',
     date: '2026-10-25',
     status: 'released',

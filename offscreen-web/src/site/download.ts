@@ -16,13 +16,13 @@ export interface ReleaseInfo {
 
 /** 与 public/downloads/version.json 同步的内置回退值（静态部署时接口不可用时展示） */
 export const FALLBACK_RELEASE: ReleaseInfo = {
-  version: '1.2.18',
-  versionCode: 21,
+  version: '1.2.19',
+  versionCode: 22,
   sizeMB: 3.7,
   minAndroid: 'Android 9.0',
   targetAndroid: 'Android 16',
   releaseDate: '2026-10-25',
-  notes: '修复 OPPO / ColorOS 等 OEM 桌面添加小组件时提示「载入窗口小部件时出现问题」的根因：绑定窗口期取数过慢导致桌面等不及。现在添加瞬间先上占位内容、真实数据异步补上，2×2/4×1 只读轻量数据，4×3 单独加载排行并加超时保护。更新后请删掉旧部件重新添加。',
+  notes: '【诊断版】此版本为临时诊断构建，不显示真实的屏幕时长数据，而是把小组件的执行链路与真实异常直接显示在部件卡片上，用于定位 OPPO / ColorOS 上「载入窗口小部件时出现问题」的根因。请安装后添加小组件，并把卡片显示的文字截图反馈。',
   apk: { url: '', sha256: '', sizeBytes: 0 },
   mirrors: [
     { name: 'GitHub Releases', url: 'https://github.com/ZwZ-1206/Margin/releases/latest', note: '国际线路备用' },
