@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 2x2 小部件：今日屏幕 + 专注时长
+     注意：不用 previewLayout——预览走静态位图 previewImage，
+     厂商桌面在选择器里只解码图片，不会在启动器进程 inflate 我们的布局 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:label="留白 · 今日屏幕"
+    android:label="留白 今日屏幕"
     android:minWidth="110dp"
     android:minHeight="110dp"
     android:targetCellWidth="2"
     android:targetCellHeight="2"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget_small"
-    android:previewLayout="@layout/widget_small"
+    android:previewImage="@drawable/widget_preview_small"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen" />

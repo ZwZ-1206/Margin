@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 大部件 TOP1 占比条：底层轨道 + 左侧裁剪填充（ClipDrawable，RemoteViews 用
+     setImageViewLevel 驱动，0~10000；只用 ImageView + 框架 Drawable，最稳妥） -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#E6E1D6" />
+            <corners android:radius="2dp" />
+        </shape>
+    </item>
+    <item>
+        <clip
+            android:clipOrientation="horizontal"
+            android:gravity="left">
+            <shape android:shape="rectangle">
+                <solid android:color="#0A7A61" />
+                <corners android:radius="2dp" />
+            </shape>
+        </clip>
+    </item>
+</layer-list>

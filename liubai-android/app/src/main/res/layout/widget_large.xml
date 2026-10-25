@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 4x3 大部件：今日屏幕概览 + 使用时长 TOP 3（点击应用行可直接打开该应用） -->
+<!-- 4x3 大部件：今日屏幕概览 + 使用时长 TOP 3（点击应用行可直接打开该应用）
+     兼容性约束：仅用 RemoteViews 官方支持的 View（LinearLayout/TextView/View/ImageView），
+     属性只用到 API 1 就有的（显式 marginTop/Bottom/Start/End），不依赖启动器主题 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/background"
     android:layout_width="match_parent"
@@ -42,8 +44,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:baselineAligned="true"
-        android:gravity="bottom">
+        android:gravity="center_vertical">
 
         <TextView
             android:id="@+id/widget_screen"
@@ -58,7 +59,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="6dp"
-            android:layout_marginBottom="4dp"
+            android:layout_marginTop="4dp"
             android:text="今日屏幕"
             android:textSize="12sp"
             android:textColor="#6E675C" />
@@ -72,7 +73,6 @@
             android:id="@+id/widget_focus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="6dp"
             android:text="专注 0 分钟"
             android:textSize="12sp"
             android:textStyle="bold"
@@ -82,7 +82,8 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginVertical="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
         android:background="#E6E1D6" />
 
     <TextView
@@ -113,7 +114,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:ellipsize="end"
             android:maxLines="1"
             android:text="—"
             android:textSize="13sp"
@@ -128,14 +128,12 @@
             android:textSize="12sp"
             android:textColor="#6E675C" />
 
-        <ProgressBar
+        <ImageView
             android:id="@+id/top_bar_1"
-            style="@android:style/Widget.ProgressBar.Horizontal"
             android:layout_width="44dp"
             android:layout_height="4dp"
-            android:max="100"
-            android:progress="0"
-            android:progressTint="#0A7A61" />
+            android:src="@drawable/widget_bar_green"
+            android:contentDescription="相对耗时" />
     </LinearLayout>
 
     <!-- 排行行 2 -->
@@ -159,7 +157,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:ellipsize="end"
             android:maxLines="1"
             android:text="—"
             android:textSize="13sp"
@@ -174,14 +171,12 @@
             android:textSize="12sp"
             android:textColor="#6E675C" />
 
-        <ProgressBar
+        <ImageView
             android:id="@+id/top_bar_2"
-            style="@android:style/Widget.ProgressBar.Horizontal"
             android:layout_width="44dp"
             android:layout_height="4dp"
-            android:max="100"
-            android:progress="0"
-            android:progressTint="#C4BFB2" />
+            android:src="@drawable/widget_bar_gray"
+            android:contentDescription="相对耗时" />
     </LinearLayout>
 
     <!-- 排行行 3 -->
@@ -205,7 +200,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:ellipsize="end"
             android:maxLines="1"
             android:text="—"
             android:textSize="13sp"
@@ -220,14 +214,12 @@
             android:textSize="12sp"
             android:textColor="#6E675C" />
 
-        <ProgressBar
+        <ImageView
             android:id="@+id/top_bar_3"
-            style="@android:style/Widget.ProgressBar.Horizontal"
             android:layout_width="44dp"
             android:layout_height="4dp"
-            android:max="100"
-            android:progress="0"
-            android:progressTint="#C4BFB2" />
+            android:src="@drawable/widget_bar_gray"
+            android:contentDescription="相对耗时" />
     </LinearLayout>
 
     <!-- 无数据时的空状态（权限未开 / 今日无记录） -->

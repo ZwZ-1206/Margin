@@ -1,15 +1,15 @@
 {
-  "version": "1.2.16",
-  "versionCode": 19,
-  "sizeMB": 3,
+  "version": "1.2.17",
+  "versionCode": 20,
+  "sizeMB": 3.6,
   "minAndroid": "Android 9.0",
   "targetAndroid": "Android 16",
   "releaseDate": "2026-10-25",
-  "notes": "v1.2.16：修复部分机型（小米 / HyperOS 等）添加 4×3「使用排行」小组件时提示「载入小组件时出现问题」的问题——布局里的主题属性样式改成了显式平台样式，并给部件更新加了隔离。已经加上去的坏部件需要删掉重新添加。其余功能同 v1.2.15（大尺寸小组件 + 三尺寸布局重排 + 首页时长实时化 + Margin「留白」标题 + 硬锁忘记密码入口 + 咖啡馆真实录音）。",
+  "notes": "v1.2.17：修复 OPPO / ColorOS 等 OEM 桌面添加小组件时提示「载入窗口小部件时出现问题」的问题。v1.2.16 只修了大尺寸部件的主题属性样式，但在该类机型上三个尺寸仍无法添加。本次把三个部件的布局全部退回到最保守的构造集——只用 RemoteViews 官方支持的 View（LinearLayout / TextView / View / ImageView）与 API 1 属性（显式 marginTop/Bottom/Start/End），并去掉预览布局 previewLayout、改为静态位图预览：桌面选择器只解码图片，不会在启动器进程里 inflate 我们的布局。大部件 TOP 3 占比条从 ProgressBar 改为 ImageView + ClipDrawable；部件更新链路全面加固，取数/构建/推送任何一步失败都只降级为占位布局，App 进程不再可能在绑定窗口期崩溃。注意：已经加到桌面的部件不会自愈，更新后请删掉旧的「留白」部件再重新添加。",
   "apk": {
-    "url": "downloads/margin-1.2.16.apk",
-    "sha256": "b9770212b780b3ee9819d9ed323c255318de01abe8b4a90ff3bd1089fa49bbeb",
-    "sizeBytes": 3740134
+    "url": "downloads/margin-1.2.17.apk",
+    "sha256": "b7a0a31a86e272b9659779ef889c8c040df237d684872acb796c06ddf5ddceb9",
+    "sizeBytes": 3805152
   },
   "mirrors": [
     {

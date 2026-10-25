@@ -12,6 +12,7 @@ import com.liubai.core.common.DurationFormat
 import com.liubai.data.widget.WidgetData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 /**
@@ -21,6 +22,11 @@ import kotlinx.coroutines.launch
  * 更新时机：系统定时（30 分钟）、App 打开、每次采集完成、开机、精确监控轮询。
  * 点击打开 App（用包管理器启动 Intent，避免 R8 混淆后类名找不到）；
  * 大部件点击某个应用行可直接打开该应用。
+ *
+ * 兼容性原则（OEM 桌面报「载入窗口小部件时出现问题」的根因都在桌面进程侧）：
+ * 1. 布局只用 RemoteViews 官方支持的 View 与 API 1 属性，不用 previewLayout；
+ * 2. 本条是兜底：更新链路上任何异常都必须吞掉——App 进程一旦在绑定/更新窗口期
+ *    崩溃，桌面就会弹「载入窗口小部件时出现问题」，且用户侧看不出是 App 崩了。
  */
 open class MarginWidgetProvider : AppWidgetProvider() {
 
@@ -32,18 +38,31 @@ open class MarginWidgetProvider : AppWidgetProvider() {
 
     companion object {
 
+        /** 共用一个受监督的 scope，避免每次广播都新建且异常逃逸到线程默认处理器 */
+        private val widgetScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
         fun updateAll(context: Context) {
             val app = context.applicationContext
-            // onUpdate 跑在主线程，读库 + 查 UsageStats + 转图标会卡 UI，统一放后台
-            CoroutineScope(Dispatchers.IO).launch {
-                val data = runCatching { WidgetData.snapshot(app) }.getOrNull() ?: return@launch
-                val mgr = AppWidgetManager.getInstance(app) ?: return@launch
-                providers(app).forEach { (provider, layoutId) ->
-                    val ids = mgr.getAppWidgetIds(provider)
-                    if (ids.isEmpty()) return@forEach
-                    // 单个部件的 RemoteViews 构建失败不能拖垮其他部件
-                    val views = runCatching { build(app, layoutId, data) }.getOrNull() ?: return@forEach
-                    ids.forEach { id -> mgr.updateAppWidget(id, views) }
+            widgetScope.launch {
+                runCatching {
+                    // 取数失败也要继续：至少把 initialLayout（占位数据）推上桌面
+                    val data = runCatching { WidgetData.snapshot(app) }.getOrNull()
+                    val mgr = runCatching { AppWidgetManager.getInstance(app) }.getOrNull()
+                        ?: return@runCatching
+                    providers(app).forEach { (provider, layoutId) ->
+                        val ids = runCatching { mgr.getAppWidgetIds(provider) }.getOrNull()
+                        if (ids == null || ids.isEmpty()) return@forEach
+                        val views = if (data != null) {
+                            runCatching { build(app, layoutId, data) }.getOrNull()
+                        } else {
+                            null
+                        } ?: RemoteViews(app.packageName, layoutId)
+                        // 单个 widgetId 推送失败不影响其他实例；updateAppWidget 抛异常
+                        // 会直接拖垮 App 进程，必须逐个兜住
+                        ids.forEach { id ->
+                            runCatching { mgr.updateAppWidget(id, views) }
+                        }
+                    }
                 }
             }
         }
@@ -140,11 +159,14 @@ open class MarginWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(row.name, app.label)
                 views.setTextViewText(row.time, DurationFormat.chinese(app.totalMs))
                 views.setImageViewBitmap(row.icon, app.icon)
-                views.setProgressBar(
+                // 占比条用 ImageView + ClipDrawable：RemoteViews 的 setInt 反射动作
+                // 调用 ImageView.setImageLevel(0~10000) 驱动裁剪宽度。
+                // 比 ProgressBar 更保守——ImageView 是 RemoteViews 支持最完整的控件，
+                // 且不依赖任何平台样式在桌面进程里的解析
+                views.setInt(
                     row.bar,
-                    100,
-                    if (leader > 0) (app.totalMs * 100 / leader).toInt() else 0,
-                    false,
+                    "setImageLevel",
+                    if (leader > 0) (app.totalMs * 10000 / leader).toInt() else 0,
                 )
                 // 点击这一行 → 打开对应应用（取不到启动 Intent 时静默跳过）
                 val target = context.packageManager.getLaunchIntentForPackage(app.packageName)

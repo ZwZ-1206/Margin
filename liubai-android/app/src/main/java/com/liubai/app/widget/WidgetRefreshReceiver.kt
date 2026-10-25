@@ -12,6 +12,7 @@ import android.content.Intent
 class WidgetRefreshReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != "com.liubai.action.WIDGET_REFRESH") return
-        MarginWidgetProvider.updateAll(context)
+        // 广播接收器里抛异常 = App 进程崩，桌面侧可能弹「载入小部件时出现问题」
+        runCatching { MarginWidgetProvider.updateAll(context) }
     }
 }
