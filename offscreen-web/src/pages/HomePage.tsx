@@ -3,6 +3,7 @@ import { FEATURES, PRIVACY_POINTS } from '../site/data';
 import { ICONS } from '../components/Icons';
 import { PhoneMockup } from '../components/PhoneMockup';
 import { SponsorCard } from '../components/SponsorCard';
+import { WidgetShowcase } from '../components/WidgetShowcase';
 
 export function HomePage({ onNavigate }: { onNavigate: (r: Route) => void }) {
   return (
@@ -58,22 +59,33 @@ export function HomePage({ onNavigate }: { onNavigate: (r: Route) => void }) {
           <div className="section-head">
             <span className="eyebrow">功能</span>
             <h2>少即是多的时间工具</h2>
-            <p>六个核心能力，覆盖「看见时间 → 管理注意力 → 温和干预」的完整闭环。</p>
+            <p>七个核心能力，覆盖「看见时间 → 管理注意力 → 温和干预」的完整闭环。</p>
           </div>
           <div className="feature-grid">
             {FEATURES.map((f) => {
               const Icon = ICONS[f.icon] ?? ICONS.timer;
               return (
-                <article className="card feature-card" key={f.title}>
+                <article className={`card feature-card${f.wide ? ' wide' : ''}`} key={f.title}>
                   <span className="fic"><Icon size={22} /></span>
-                  <h3>{f.title}</h3>
-                  <p>{f.desc}</p>
+                  <div className="wt-body">
+                    <h3>{f.title}</h3>
+                    <p>{f.desc}</p>
+                  </div>
+                  {f.chips && (
+                    <div className="wgt-chips">
+                      {f.chips.map((c) => (
+                        <span className="wgt-chip" key={c}>{c}</span>
+                      ))}
+                    </div>
+                  )}
                 </article>
               );
             })}
           </div>
         </div>
       </section>
+
+      <WidgetShowcase />
 
       <section className="section">
         <div className="container">

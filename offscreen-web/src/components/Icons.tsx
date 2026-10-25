@@ -45,6 +45,13 @@ export const IconWidget = ({ size = 24 }: P) => (
   </svg>
 );
 
+/* 声波（白噪音）：两道正弦，兼作水声意象 */
+export const IconWave = ({ size = 24 }: P) => (
+  <svg {...base(size)}>
+    <path d="M2 9c2.5-3.2 5.5-3.2 8 0s5.5 3.2 8 0M2 15c2.5-3.2 5.5-3.2 8 0s5.5 3.2 8 0" />
+  </svg>
+);
+
 export const IconHeart = ({ size = 24 }: P) => (
   <svg {...base(size)}>
     <path d="M12 20s-7.5-4.6-9.3-9A5.4 5.4 0 0 1 12 6.5 5.4 5.4 0 0 1 21.3 11c-1.8 4.4-9.3 9-9.3 9z" />
@@ -149,6 +156,7 @@ export const ICONS: Record<string, (p: P) => JSX.Element> = {
   lock: IconLock,
   bell: IconBell,
   widget: IconWidget,
+  wave: IconWave,
   heart: IconHeart,
   'eye-off': IconEyeOff,
   database: IconDatabase,

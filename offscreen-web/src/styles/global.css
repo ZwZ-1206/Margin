@@ -457,3 +457,103 @@ img { max-width: 100%; display: block; }
 @media (max-width: 680px) {
   .qr-img { width: 140px; }
 }
+
+/* ================= 桌面小组件展示 ================= */
+/* 部件重绘刻意用固定暖纸色（#F8F6F1 / #1B1915 / #6E675C / #0A7A61）：
+   真机小组件是系统级 RemoteViews，浅色卡片 + 静态字色，不随 App 深色模式变化 */
+.widget-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: center;
+  padding: var(--space-10) var(--space-8);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(120% 100% at 18% 0%, color-mix(in srgb, var(--primary) 10%, transparent), transparent 62%),
+    var(--page-bg);
+}
+.widget-col { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); min-width: 0; margin: 0; }
+.widget-col figcaption { font-size: var(--text-caption); color: var(--text-tertiary); letter-spacing: 0.04em; }
+.widget-col-side { gap: var(--space-6); }
+
+.wgt {
+  width: 100%;
+  background: #F8F6F1;
+  border: 1px solid #E6E1D6;
+  border-radius: 22px;
+  color: #1B1915;
+  box-shadow: var(--shadow-2);
+}
+.wgt-lg { padding: var(--space-4); display: flex; flex-direction: column; }
+
+.wg-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
+.wg-brand { font-size: 12px; font-weight: 700; color: #8A8272; white-space: nowrap; }
+.wg-pickup { font-size: 11px; color: #6E675C; white-space: nowrap; }
+.wg-hero { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.wg-screen { font-size: 32px; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.wg-screen-lbl { font-size: 12px; color: #6E675C; }
+.wg-focus { margin-left: auto; font-size: 12px; font-weight: 700; color: #0A7A61; white-space: nowrap; }
+.wg-div { height: 1px; background: #E6E1D6; margin: 10px 0 8px; }
+.wg-top-lbl { font-size: 11px; color: #6E675C; }
+.wg-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.wg-ic {
+  width: 26px; height: 26px; border-radius: 7px; flex: none;
+  display: grid; place-items: center;
+  color: #FFFFFF; font-size: 12px; font-weight: 600;
+}
+.wg-name { font-size: 13px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wg-time { font-size: 12px; color: #6E675C; font-variant-numeric: tabular-nums; margin-right: 8px; white-space: nowrap; }
+.wg-bar { width: 44px; height: 4px; border-radius: 2px; background: #E6E1D6; overflow: hidden; flex: none; }
+.wg-bar i { display: block; height: 100%; border-radius: 2px; }
+
+.wgt-sm { padding: 14px; max-width: 190px; }
+.wgt-sm .wg-screen-sm { font-size: 24px; margin-top: 4px; }
+.wgt-sm .wg-screen-lbl { display: block; font-size: 10px; margin-top: 1px; }
+.wgt-sm .wg-div { margin: 7px 0; }
+.wgt-sm .wg-focus { margin-left: 0; font-size: 12px; }
+
+.wgt-md { padding: 14px; }
+.wg-md-grid { display: grid; grid-template-columns: 1.3fr 1px 1fr 1fr; gap: 10px; align-items: center; }
+.wg-md-sep { width: 1px; height: 30px; background: #E6E1D6; justify-self: center; }
+.wg-md-lbl { display: block; font-size: 10px; color: #6E675C; white-space: nowrap; }
+.wg-md-val { display: block; font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; white-space: nowrap; }
+.wg-md-main { font-size: 22px; }
+.wg-md-focus { color: #0A7A61; }
+
+.widget-points { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-5); margin-top: var(--space-8); }
+.widget-point { padding: var(--space-5); display: flex; gap: var(--space-3); align-items: flex-start; }
+.widget-point .fic { color: var(--primary); flex: none; margin-top: 2px; }
+.widget-point b { display: block; font-size: var(--text-body-m); font-weight: 600; margin-bottom: 2px; }
+.widget-point span { font-size: var(--text-body-s); color: var(--text-secondary); line-height: 1.6; }
+.widget-hint { margin-top: var(--space-6); font-size: var(--text-body-s); color: var(--text-secondary); line-height: 1.7; }
+.widget-hint b { color: var(--text-primary); font-weight: 600; }
+
+/* 功能网格里的「桌面小组件」宽卡：横排，带尺寸徽章 */
+.feature-card.wide { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: var(--space-5); }
+.feature-card.wide .fic { flex: none; }
+.feature-card.wide .wt-body { flex: 1; min-width: 0; }
+.feature-card.wide p { margin-top: var(--space-2); }
+.wgt-chips { display: flex; gap: var(--space-2); flex: none; flex-wrap: wrap; }
+.wgt-chip {
+  font-size: var(--text-caption); font-weight: 500; white-space: nowrap;
+  color: var(--primary); background: var(--primary-container);
+  padding: 3px 10px; border-radius: var(--radius-full);
+}
+
+@media (max-width: 900px) {
+  .widget-stage { grid-template-columns: 1fr; padding: var(--space-8) var(--space-5); }
+  .widget-points { grid-template-columns: repeat(2, 1fr); }
+  .wgt-lg { max-width: 420px; }
+}
+@media (max-width: 680px) {
+  .widget-points { grid-template-columns: 1fr; }
+  .feature-card.wide { flex-direction: column; align-items: flex-start; }
+  .wg-screen { font-size: 26px; }
+  .wg-md-main { font-size: 19px; }
+}
+@media (max-width: 380px) {
+  .wg-md-grid { grid-template-columns: 1.2fr 1px 0.9fr 0.8fr; gap: 8px; }
+  .wg-md-val { font-size: 14px; }
+  .wg-md-main { font-size: 17px; }
+}
