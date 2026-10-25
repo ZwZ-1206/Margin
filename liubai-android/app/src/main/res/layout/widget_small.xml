@@ -40,15 +40,59 @@
             android:textColor="#6E675C" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/widget_screen"
+    <!-- 今日屏幕：第一行小时、第二行分钟（RemoteViews 白名单内控件） -->
+    <LinearLayout
+        android:id="@+id/widget_screen_hours_row"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="0 分钟"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#1B1915" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/widget_screen_hours"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:text="0"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#1B1915" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="3dp"
+            android:text="小时"
+            android:textSize="11sp"
+            android:textColor="#6E675C" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/widget_screen_minutes_row"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/widget_screen_minutes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:text="0"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#1B1915" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="3dp"
+            android:text="分"
+            android:textSize="11sp"
+            android:textColor="#6E675C" />
+    </LinearLayout>
 
     <TextView
         android:layout_width="wrap_content"

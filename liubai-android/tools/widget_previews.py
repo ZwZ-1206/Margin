@@ -47,18 +47,25 @@ d.text((28, 26), "「留白」", font=font(22, True), fill=BRAND)
 pickup = "拿起 32"
 pw = d.textlength(pickup, font=font(21))
 d.text((W - 28 - pw, 28), pickup, font=font(21), fill=MUTE)
-d.text((28, 74), "2 小时 15 分钟", font=font(40, True), fill=INK)
-d.text((28, 128), "今日屏幕", font=font(21), fill=MUTE)
-d.line([28, 168, W - 28, 168], fill=BORDER, width=2)
-d.text((28, 186), "专注 45 分钟", font=font(25, True), fill=GREEN)
+# 第一行：小时
+d.text((28, 64), "6", font=font(46, True), fill=INK)
+d.text((28 + d.textlength("6", font=font(46, True)) + 6, 86),
+       "小时", font=font(20), fill=MUTE)
+# 第二行：分钟
+d.text((28, 116), "29", font=font(46, True), fill=INK)
+d.text((28 + d.textlength("29", font=font(46, True)) + 6, 138),
+       "分", font=font(20), fill=MUTE)
+d.text((28, 174), "今日屏幕", font=font(21), fill=MUTE)
+d.line([28, 208, W - 28, 208], fill=BORDER, width=2)
+d.text((28, 224), "专注 45 分钟", font=font(25, True), fill=GREEN)
 save(img, "widget_preview_small.png")
 
 # ---------- 4x1 中 ----------
 W, H, R = 600, 150, 26
 img, d = card(W, H, R)
-cols = [("今日屏幕", "2 小时 15 分", 40, INK),
-        ("今日专注", "45 分钟", 30, GREEN),
-        ("拿起次数", "32 次", 30, INK)]
+cols = [("今日屏幕", "6小时29分", 32, INK),
+        ("今日专注", "45分", 28, GREEN),
+        ("拿起次数", "55", 28, INK)]
 x = 28
 for i, (label, value, size, color) in enumerate(cols):
     d.text((x, 34), label, font=font(20), fill=MUTE)

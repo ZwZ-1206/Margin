@@ -69,6 +69,18 @@ object DurationFormat {
             else -> "${m} 分钟"
         }
     }
+
+    /** 紧凑中文（无空格，小部件窄列防换行）：6小时29分 / 6小时 / 45分 */
+    fun compact(ms: Long): String {
+        val totalMin = ms / 60000
+        val h = totalMin / 60
+        val m = totalMin % 60
+        return when {
+            h > 0 && m > 0 -> "${h}小时${m}分"
+            h > 0 -> "${h}小时"
+            else -> "${m}分"
+        }
+    }
 }
 
 /** 统一错误类型（data 层归一，UI 层映射文案） */

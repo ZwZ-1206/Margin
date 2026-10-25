@@ -57,6 +57,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'v1.2.22',
+    date: '2026-10-25',
+    status: 'released',
+    items: [
+      '<b>2×2 部件：今日屏幕时间拆成两行</b>——第一行小时、第二行分钟，长时长不再溢出部件边界；整小时时只显示小时行，不足 1 小时只显示分钟行',
+      '<b>4×1 概览条：改用紧凑时长文案</b>（如「6小时29分」「45分」）并收紧字号与列宽，屏幕时间不再折行错位，三列恢复整齐',
+      '更新后请删掉桌面上旧的「留白」2×2 / 4×1 部件再重新添加（旧部件不会自愈）',
+    ],
+  },
+  {
     version: 'v1.2.21',
     date: '2026-10-25',
     status: 'released',

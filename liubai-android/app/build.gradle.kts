@@ -14,8 +14,8 @@ android {
         applicationId = "com.liubai.app"
         minSdk = 28
         targetSdk = 36
-        versionCode = 24
-        versionName = "1.2.21"
+        versionCode = 25
+        versionName = "1.2.22"
         androidResources.localeFilters += listOf("zh", "en")
     }
 

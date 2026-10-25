@@ -16,13 +16,13 @@ export interface ReleaseInfo {
 
 /** 与 public/downloads/version.json 同步的内置回退值（静态部署时接口不可用时展示） */
 export const FALLBACK_RELEASE: ReleaseInfo = {
-  version: '1.2.21',
-  versionCode: 24,
+  version: '1.2.22',
+  versionCode: 25,
   sizeMB: 3.6,
   minAndroid: 'Android 9.0',
   targetAndroid: 'Android 16',
   releaseDate: '2026-10-25',
-  notes: '4×3 大部件的使用排行从 TOP 3 扩充到 TOP 5：一次排满今日耗时最多的五个应用（图标、时长、相对第一名的占比条），第 4、5 行同样可点击直接打开对应应用；图标取数超时放宽到 4 秒，超时仍只降级为「无排行」，部件照常可用。更新后请删掉桌面上旧的「留白」大部件再重新添加。',
+  notes: '桌面小组件排版优化：2×2 的今日屏幕时间拆成两行显示（第一行小时、第二行分钟），不再溢出部件边界；4×1 概览条改用紧凑时长文案（如「6小时29分」）并收紧字号列宽，不再折行错位。',
   apk: { url: '', sha256: '', sizeBytes: 0 },
   mirrors: [
     { name: 'GitHub Releases', url: 'https://github.com/ZwZ-1206/Margin/releases/latest', note: '国际线路备用' },

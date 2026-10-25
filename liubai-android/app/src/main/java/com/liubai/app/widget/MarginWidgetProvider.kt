@@ -167,15 +167,41 @@ open class MarginWidgetProvider : AppWidgetProvider() {
 
         private fun build(context: Context, layoutId: Int, data: WidgetData.Snapshot): RemoteViews {
             val views = RemoteViews(context.packageName, layoutId)
-            views.setTextViewText(
-                com.liubai.app.R.id.widget_screen,
-                DurationFormat.chinese(data.screenMs),
-            )
-            // 中部件上方已有「今日专注」标签、大部件是行内标签，都不要再重复「专注」二字
+            // 今日屏幕：2x2 拆「小时 / 分钟」两行（窄宽度不溢出）；4x1 用紧凑中文防换行；
+            // 4x3 空间足，保持标准中文
+            when (layoutId) {
+                com.liubai.app.R.layout.widget_small -> {
+                    val totalMin = data.screenMs / 60000
+                    val h = (totalMin / 60).toInt()
+                    val m = (totalMin % 60).toInt()
+                    views.setTextViewText(com.liubai.app.R.id.widget_screen_hours, "$h")
+                    views.setTextViewText(com.liubai.app.R.id.widget_screen_minutes, "$m")
+                    views.setViewVisibility(
+                        com.liubai.app.R.id.widget_screen_hours_row,
+                        if (h > 0) View.VISIBLE else View.GONE,
+                    )
+                    // 整小时（m==0）只留小时行；不足 1 分钟时仍显示「0 分」兜底
+                    views.setViewVisibility(
+                        com.liubai.app.R.id.widget_screen_minutes_row,
+                        if (h == 0 || m > 0) View.VISIBLE else View.GONE,
+                    )
+                }
+                com.liubai.app.R.layout.widget_medium ->
+                    views.setTextViewText(
+                        com.liubai.app.R.id.widget_screen,
+                        DurationFormat.compact(data.screenMs),
+                    )
+                else ->
+                    views.setTextViewText(
+                        com.liubai.app.R.id.widget_screen,
+                        DurationFormat.chinese(data.screenMs),
+                    )
+            }
+            // 中部件上方已有「今日专注」标签（用紧凑值）；小/大部件是行内标签，带「专注」前缀
             views.setTextViewText(
                 com.liubai.app.R.id.widget_focus,
                 if (layoutId == com.liubai.app.R.layout.widget_medium) {
-                    DurationFormat.chinese(data.focusMs)
+                    DurationFormat.compact(data.focusMs)
                 } else {
                     "专注 ${DurationFormat.chinese(data.focusMs)}"
                 },
