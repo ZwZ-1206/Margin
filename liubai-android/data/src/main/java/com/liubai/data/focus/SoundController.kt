@@ -29,7 +29,36 @@ object SoundController {
     fun keyOfBuiltin(sound: WhiteNoiseSynth.Sound) = "BUILTIN:${sound.name}"
     fun keyOfFile(fileName: String) = "FILE:$fileName"
 
+    /** 咖啡馆用的内置录音循环（assets 下，需 noCompress 才能 openFd 流式播放） */
+    const val CAFE_ASSET = "cafe_loop.opus"
+
     val isPlaying: Boolean get() = currentKey != null
+
+    /**
+     * 流式播放 assets 里的循环音频。成功返回 true；失败返回 false（调用方退回合成音色）。
+     * 注意：资源在 APK 里必须是「不压缩存储」，openFd 才能拿到 offset/length
+     * （app 模块 androidResources.noCompress 已配置 "opus"）。
+     */
+    private fun startAssetLoop(context: Context, assetName: String, volume: Float): Boolean {
+        val v = volume.coerceIn(0f, 1f)
+        return runCatching {
+            val afd = context.assets.openFd(assetName)
+            val mp = MediaPlayer().apply {
+                setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                isLooping = true
+                setVolume(v, v)
+                prepare()
+                start()
+            }
+            afd.close()
+            player = mp
+            true
+        }.getOrElse {
+            runCatching { player?.release() }
+            player = null
+            false
+        }
+    }
 
     /** 播放指定音色；[volume] 0f..1f，[intensity] 0f..1f（仅内置雨声） */
     fun play(context: Context, key: String?, volume: Float, intensity: Float = this.intensity) {
@@ -48,6 +77,13 @@ object SoundController {
         if (key.startsWith("BUILTIN:")) {
             val name = key.removePrefix("BUILTIN:")
             val sound = runCatching { WhiteNoiseSynth.Sound.valueOf(name) }.getOrNull() ?: return
+            // 咖啡馆：播放 assets 里的真实环境录音循环（高通 + 中频提亮后打包）。
+            // 资产缺失等异常时退回实时合成，保证有声音。
+            if (sound == WhiteNoiseSynth.Sound.CAFE &&
+                startAssetLoop(context, CAFE_ASSET, volume)
+            ) {
+                return
+            }
             synth.volume = volume.coerceIn(0f, 1f)
             synth.intensity = this.intensity
             synth.start(sound)

@@ -277,8 +277,8 @@ private fun LockScreen(packageName: String, settings: AppSettings?) {
 
             Spacer(Modifier.height(16.dp))
             Text(
-                "解锁后 10 分钟内不再锁定。忘记密码？只能等到次日零点自动解锁——" +
-                    "这是留白能给你的最后一道诚实边界。",
+                "解锁后 10 分钟内不再锁定。\n" +
+                    "忘记密码请前往留白App 设置页 > 干预 修改解锁密码，不需要旧密码。",
                 style = MaterialTheme.typography.labelSmall,
                 color = extras.textTertiary,
                 textAlign = TextAlign.Center,

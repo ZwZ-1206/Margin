@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 4x3 大部件：今日屏幕概览 + 使用时长 TOP 3（点击应用行可直接打开该应用） -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/widget_bg">
+
+    <!-- 头部：品牌 + 拿起次数 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="「留白」"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#8A8272" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/widget_pickup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="今日拿起 0 次"
+            android:textSize="11sp"
+            android:textColor="#6E675C" />
+    </LinearLayout>
+
+    <!-- 主指标：今日屏幕 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:baselineAligned="true"
+        android:gravity="bottom">
+
+        <TextView
+            android:id="@+id/widget_screen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0 分钟"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:textColor="#1B1915" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_marginBottom="4dp"
+            android:text="今日屏幕"
+            android:textSize="12sp"
+            android:textColor="#6E675C" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/widget_focus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:text="专注 0 分钟"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#0A7A61" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginVertical="10dp"
+        android:background="#E6E1D6" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="使用时长 TOP 3"
+        android:textSize="11sp"
+        android:textColor="#6E675C" />
+
+    <!-- 排行行 1 -->
+    <LinearLayout
+        android:id="@+id/top_row_1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/top_icon_1"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginEnd="10dp"
+            android:contentDescription="应用图标" />
+
+        <TextView
+            android:id="@+id/top_name_1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="—"
+            android:textSize="13sp"
+            android:textColor="#1B1915" />
+
+        <TextView
+            android:id="@+id/top_time_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:text="—"
+            android:textSize="12sp"
+            android:textColor="#6E675C" />
+
+        <ProgressBar
+            android:id="@+id/top_bar_1"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="44dp"
+            android:layout_height="4dp"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="#0A7A61" />
+    </LinearLayout>
+
+    <!-- 排行行 2 -->
+    <LinearLayout
+        android:id="@+id/top_row_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/top_icon_2"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginEnd="10dp"
+            android:contentDescription="应用图标" />
+
+        <TextView
+            android:id="@+id/top_name_2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="—"
+            android:textSize="13sp"
+            android:textColor="#1B1915" />
+
+        <TextView
+            android:id="@+id/top_time_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:text="—"
+            android:textSize="12sp"
+            android:textColor="#6E675C" />
+
+        <ProgressBar
+            android:id="@+id/top_bar_2"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="44dp"
+            android:layout_height="4dp"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="#C4BFB2" />
+    </LinearLayout>
+
+    <!-- 排行行 3 -->
+    <LinearLayout
+        android:id="@+id/top_row_3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/top_icon_3"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginEnd="10dp"
+            android:contentDescription="应用图标" />
+
+        <TextView
+            android:id="@+id/top_name_3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="—"
+            android:textSize="13sp"
+            android:textColor="#1B1915" />
+
+        <TextView
+            android:id="@+id/top_time_3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:text="—"
+            android:textSize="12sp"
+            android:textColor="#6E675C" />
+
+        <ProgressBar
+            android:id="@+id/top_bar_3"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="44dp"
+            android:layout_height="4dp"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="#C4BFB2" />
+    </LinearLayout>
+
+    <!-- 无数据时的空状态（权限未开 / 今日无记录） -->
+    <TextView
+        android:id="@+id/top_empty"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="开启「使用情况访问」后，这里显示今日耗时最多的三个应用"
+        android:textSize="11sp"
+        android:textColor="#8A8272"
+        android:visibility="gone" />
+</LinearLayout>

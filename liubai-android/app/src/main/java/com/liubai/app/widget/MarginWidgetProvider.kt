@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.view.View
 import android.widget.RemoteViews
 import com.liubai.core.common.DurationFormat
 import com.liubai.data.widget.WidgetData
@@ -15,10 +16,11 @@ import kotlinx.coroutines.launch
 
 /**
  * 桌面小部件：RemoteViews 实现（无额外依赖）。
- * 小 2x2 与中 4x1 两种尺寸，展示今日屏幕 / 专注 / 拿起次数。
+ * 小 2x2（屏幕/专注）、中 4x1（屏幕/专注/拿起）、大 4x3（概览 + 使用时长 TOP 3）。
  *
  * 更新时机：系统定时（30 分钟）、App 打开、每次采集完成、开机、精确监控轮询。
- * 点击打开 App（用包管理器启动 Intent，避免 R8 混淆后类名找不到）。
+ * 点击打开 App（用包管理器启动 Intent，避免 R8 混淆后类名找不到）；
+ * 大部件点击某个应用行可直接打开该应用。
  */
 open class MarginWidgetProvider : AppWidgetProvider() {
 
@@ -32,7 +34,7 @@ open class MarginWidgetProvider : AppWidgetProvider() {
 
         fun updateAll(context: Context) {
             val app = context.applicationContext
-            // onUpdate 跑在主线程，读库 + 查 UsageStats 会卡 UI，统一放后台
+            // onUpdate 跑在主线程，读库 + 查 UsageStats + 转图标会卡 UI，统一放后台
             CoroutineScope(Dispatchers.IO).launch {
                 val data = runCatching { WidgetData.snapshot(app) }.getOrNull() ?: return@launch
                 val mgr = AppWidgetManager.getInstance(app) ?: return@launch
@@ -50,6 +52,37 @@ open class MarginWidgetProvider : AppWidgetProvider() {
                 com.liubai.app.R.layout.widget_small,
             ComponentName(context, MarginWidgetMediumProvider::class.java) to
                 com.liubai.app.R.layout.widget_medium,
+            ComponentName(context, MarginWidgetLargeProvider::class.java) to
+                com.liubai.app.R.layout.widget_large,
+        )
+
+        /** 大部件单行视图的 id 组合 */
+        private data class TopRow(
+            val row: Int, val icon: Int, val name: Int, val time: Int, val bar: Int,
+        )
+
+        private val TOP_ROWS = listOf(
+            TopRow(
+                com.liubai.app.R.id.top_row_1,
+                com.liubai.app.R.id.top_icon_1,
+                com.liubai.app.R.id.top_name_1,
+                com.liubai.app.R.id.top_time_1,
+                com.liubai.app.R.id.top_bar_1,
+            ),
+            TopRow(
+                com.liubai.app.R.id.top_row_2,
+                com.liubai.app.R.id.top_icon_2,
+                com.liubai.app.R.id.top_name_2,
+                com.liubai.app.R.id.top_time_2,
+                com.liubai.app.R.id.top_bar_2,
+            ),
+            TopRow(
+                com.liubai.app.R.id.top_row_3,
+                com.liubai.app.R.id.top_icon_3,
+                com.liubai.app.R.id.top_name_3,
+                com.liubai.app.R.id.top_time_3,
+                com.liubai.app.R.id.top_bar_3,
+            ),
         )
 
         private fun build(context: Context, layoutId: Int, data: WidgetData.Snapshot): RemoteViews {
@@ -58,12 +91,25 @@ open class MarginWidgetProvider : AppWidgetProvider() {
                 com.liubai.app.R.id.widget_screen,
                 DurationFormat.chinese(data.screenMs),
             )
+            // 中部件上方已有「今日专注」标签、大部件是行内标签，都不要再重复「专注」二字
             views.setTextViewText(
                 com.liubai.app.R.id.widget_focus,
-                "专注 ${DurationFormat.chinese(data.focusMs)}",
+                if (layoutId == com.liubai.app.R.layout.widget_medium) {
+                    DurationFormat.chinese(data.focusMs)
+                } else {
+                    "专注 ${DurationFormat.chinese(data.focusMs)}"
+                },
             )
-            if (layoutId == com.liubai.app.R.layout.widget_medium) {
-                views.setTextViewText(com.liubai.app.R.id.widget_pickup, "${data.pickups}")
+            when (layoutId) {
+                com.liubai.app.R.layout.widget_small ->
+                    views.setTextViewText(com.liubai.app.R.id.widget_pickup, "拿起 ${data.pickups}")
+                com.liubai.app.R.layout.widget_medium ->
+                    views.setTextViewText(com.liubai.app.R.id.widget_pickup, "${data.pickups}")
+                com.liubai.app.R.layout.widget_large ->
+                    views.setTextViewText(com.liubai.app.R.id.widget_pickup, "今日拿起 ${data.pickups} 次")
+            }
+            if (layoutId == com.liubai.app.R.layout.widget_large) {
+                fillTopApps(context, views, data)
             }
             val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)
                 ?.apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP }
@@ -78,8 +124,52 @@ open class MarginWidgetProvider : AppWidgetProvider() {
             }
             return views
         }
+
+        /** 大部件：填充 TOP 3，缺数据时显示空状态；点击应用行直达该应用 */
+        private fun fillTopApps(context: Context, views: RemoteViews, data: WidgetData.Snapshot) {
+            val top = data.topApps
+            val leader = top.firstOrNull()?.totalMs ?: 0L
+            TOP_ROWS.forEachIndexed { index, row ->
+                val app = top.getOrNull(index)
+                if (app == null) {
+                    views.setViewVisibility(row.row, View.GONE)
+                    return@forEachIndexed
+                }
+                views.setViewVisibility(row.row, View.VISIBLE)
+                views.setTextViewText(row.name, app.label)
+                views.setTextViewText(row.time, DurationFormat.chinese(app.totalMs))
+                views.setImageViewBitmap(row.icon, app.icon)
+                views.setProgressBar(
+                    row.bar,
+                    100,
+                    if (leader > 0) (app.totalMs * 100 / leader).toInt() else 0,
+                    false,
+                )
+                // 点击这一行 → 打开对应应用（取不到启动 Intent 时静默跳过）
+                val target = context.packageManager.getLaunchIntentForPackage(app.packageName)
+                    ?.apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
+                if (target != null) {
+                    views.setOnClickPendingIntent(
+                        row.row,
+                        PendingIntent.getActivity(
+                            context,
+                            100 + index, // requestCode 互不相同，否则三行会互相覆盖
+                            target,
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                        ),
+                    )
+                }
+            }
+            views.setViewVisibility(
+                com.liubai.app.R.id.top_empty,
+                if (top.isEmpty()) View.VISIBLE else View.GONE,
+            )
+        }
     }
 }
 
 /** 中尺寸（4x1）小部件，与小尺寸共用更新逻辑 */
 class MarginWidgetMediumProvider : MarginWidgetProvider()
+
+/** 大尺寸（4x3）小部件：概览 + 使用时长 TOP 3 */
+class MarginWidgetLargeProvider : MarginWidgetProvider()

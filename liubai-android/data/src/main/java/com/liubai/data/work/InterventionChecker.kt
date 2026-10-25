@@ -66,7 +66,7 @@ object InterventionChecker {
                             title = if (isLocked) "$name 已锁定" else "$name 今日已达限额",
                             body = if (isLocked) {
                                 "已使用 ${DurationFormat.chinese(used)}，限额 ${DurationFormat.chinese(limit.limitMs)}。" +
-                                    "再打开它需要输入解锁密码；次日零点自动解锁。"
+                                    "再打开它需要输入解锁密码；忘记密码可在留白 设置 > 干预 修改，不需要旧密码。"
                             } else {
                                 "已使用 ${DurationFormat.chinese(used)}，限额 ${DurationFormat.chinese(limit.limitMs)}。剩下的时间，留给别的吧。"
                             },

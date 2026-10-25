@@ -70,7 +70,7 @@ node shots/take.mjs                             # 生成 shots/*.png（4 页面 
 
 ## 分发（官网即唯一渠道）
 
-- `public/downloads/margin-1.0.0.apk` —— 当前发布包（2.71MB，签名证书 SHA-256 `d62427bc…cf4`）
+- `public/downloads/margin-1.2.15.apk` —— 当前发布包（3.6MB，签名证书 SHA-256 `d62427bc…cf4`）
 - `public/downloads/version.json` —— 机器可读版本清单：版本号、体积、SHA-256、下载路径、镜像、证书指纹
 - 下载页在运行时读取该文件渲染；二维码编码 `SITE_ORIGIN + apk.url`
 - **上线前请修改** `src/site/download.ts` 中的 `SITE_ORIGIN` 为真实域名（二维码必须是绝对地址）

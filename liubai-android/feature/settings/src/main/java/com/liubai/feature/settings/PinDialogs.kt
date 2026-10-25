@@ -84,7 +84,7 @@ fun PinSetupDialog(
                 }
                 Spacer(Modifier.height(10.dp))
                 Text(
-                    "密码只以哈希形式存在本机。忘了它，只能等次日零点自动解锁。",
+                    "密码只以哈希形式存在本机。忘了它，可以在「设置 → 干预」随时修改，不需要旧密码。",
                     style = MaterialTheme.typography.labelSmall,
                     color = extras.textTertiary,
                 )

@@ -43,7 +43,7 @@ export function HomePage({ onNavigate }: { onNavigate: (r: Route) => void }) {
               </button>
             </div>
             <div className="hero-meta">
-              <div className="item"><span className="num">2.7MB</span><span className="lbl">安装包体积</span></div>
+              <div className="item"><span className="num">3.6MB</span><span className="lbl">安装包体积</span></div>
               <div className="item"><span className="num">Android 9+</span><span className="lbl">系统要求</span></div>
               <div className="item"><span className="num">0</span><span className="lbl">第三方追踪 SDK</span></div>
               <div className="item"><span className="num">100%</span><span className="lbl">功能免费</span></div>

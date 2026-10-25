@@ -75,21 +75,14 @@ fun HomeScreen(
     ) {
         item {
             Spacer(Modifier.height(8.dp))
-            Text(
-                "MARGIN",
-                style = MaterialTheme.typography.labelSmall,
-                color = extras.textTertiary,
-                letterSpacing = androidx.compose.ui.unit.TextUnit(2.4f, androidx.compose.ui.unit.TextUnitType.Sp),
-            )
             Row(verticalAlignment = Alignment.Bottom) {
-                Text("「留白」", style = MaterialTheme.typography.displayMedium, color = extras.textPrimary)
-                Spacer(Modifier.width(10.dp))
                 Text(
                     "Margin",
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.displayMedium,
                     color = extras.textSecondary,
-                    modifier = Modifier.padding(bottom = 5.dp),
                 )
+                Spacer(Modifier.width(6.dp))
+                Text("「留白」", style = MaterialTheme.typography.displayMedium, color = extras.textPrimary)
             }
             Text(
                 "A little less scrolling. A little more living.",

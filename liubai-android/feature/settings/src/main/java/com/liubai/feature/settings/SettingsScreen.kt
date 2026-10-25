@@ -303,7 +303,8 @@ fun SettingsScreen(
                     Spacer(Modifier.height(6.dp))
                     Text(
                         "说清楚的边界：卸载留白、清除留白数据、在系统设置里关掉无障碍服务，" +
-                            "都能绕过硬锁；忘记密码只能等次日零点自动解锁。留白只做「让自己更难刷到」的那道闸，" +
+                            "都能绕过硬锁；密码忘了可以随时在本页修改，不需要旧密码——" +
+                            "留白本身永不被锁，能打开这个页面就能改。留白只做「让自己更难刷到」的那道闸，" +
                             "不假装它是一把谁也打不开的锁。",
                         style = MaterialTheme.typography.labelSmall,
                         color = extras.textTertiary,
@@ -475,12 +476,18 @@ fun SettingsScreen(
     }
 
     if (showPinDialog) {
+        val hasPin = state.settings.lockPasswordHash != null
         PinSetupDialog(
-            title = if (state.settings.lockPasswordHash != null) "修改解锁密码" else "设置解锁密码",
+            title = if (hasPin) "修改解锁密码" else "设置解锁密码",
+            subtitle = if (hasPin) {
+                "不需要旧密码，直接设新的六位数字。改完后回到被锁的应用，输入新密码即可继续使用。"
+            } else {
+                "六位数字。达到限额后锁定应用时，需要输入它才能继续使用。"
+            },
             onConfirm = { pin ->
                 showPinDialog = false
                 vm.setLockPassword(pin)
-                toast = "解锁密码已设置"
+                toast = if (hasPin) "解锁密码已修改" else "解锁密码已设置"
             },
             onDismiss = { showPinDialog = false },
         )

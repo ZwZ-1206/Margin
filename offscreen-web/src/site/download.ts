@@ -16,13 +16,13 @@ export interface ReleaseInfo {
 
 /** 与 public/downloads/version.json 同步的内置回退值（静态部署时接口不可用时展示） */
 export const FALLBACK_RELEASE: ReleaseInfo = {
-  version: '1.0.0',
-  versionCode: 1,
-  sizeMB: 8,
+  version: '1.2.15',
+  versionCode: 18,
+  sizeMB: 3.6,
   minAndroid: 'Android 9.0',
   targetAndroid: 'Android 16',
-  releaseDate: '',
-  notes: '首个正式版：专注番茄钟、屏幕使用洞察、限额与挑战、桌面小部件、本地备份。完全免费，无会员，无广告。',
+  releaseDate: '2026-10-25',
+  notes: '新增 4×3 大尺寸桌面小组件「使用排行」；首页「今日屏幕时长」实时化；首页标题改为 Margin「留白」；硬锁新增「忘记密码」入口；咖啡馆改用真实录音循环。',
   apk: { url: '', sha256: '', sizeBytes: 0 },
   mirrors: [
     { name: 'GitHub Releases', url: 'https://github.com/ZwZ-1206/Margin/releases/latest', note: '国际线路备用' },

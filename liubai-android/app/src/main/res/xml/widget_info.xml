@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:label="留白 · 今日屏幕"
     android:minWidth="110dp"
     android:minHeight="110dp"
     android:targetCellWidth="2"

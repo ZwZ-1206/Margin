@@ -6,11 +6,15 @@ import com.liubai.core.common.DateKeys
 import com.liubai.core.common.DurationFormat
 import com.liubai.data.di.ServiceLocator
 import com.liubai.data.usage.UsageStatsReader
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 data class TopApp(val packageName: String, val totalMs: Long)
@@ -47,8 +51,58 @@ class HomeViewModel : ViewModel() {
     private val settingsRepo = ServiceLocator.settingsRepository
 
     private val reader = UsageStatsReader(ServiceLocator.appContext)
+    private val selfPkg = ServiceLocator.appContext.packageName
 
-    val uiState: StateFlow<HomeUiState> = combine(
+    /** 显示时钟：每秒一拍，让实时增量平滑增长 */
+    private val ticker: Flow<Long> = flow {
+        while (true) {
+            emit(System.currentTimeMillis())
+            delay(1_000L)
+        }
+    }
+
+    /** 当前前台应用快照（每 5 秒读一次；读的时刻一起带回来做插值） */
+    private data class Foreground(val pkg: String, val elapsedMs: Long, val readAt: Long)
+
+    private val foregroundPoll: Flow<Foreground?> = flow {
+        while (true) {
+            val readAt = System.currentTimeMillis()
+            val fg = runCatching { reader.currentForeground() }.getOrNull()
+            emit(fg?.takeIf { it.first != selfPkg }?.let { Foreground(it.first, it.second, readAt) })
+            delay(5_000L)
+        }
+    }.flowOn(Dispatchers.IO) // UsageStats 查询是同步 I/O，不能压在主线程上
+
+    /**
+     * 实时增量（毫秒）。
+     *
+     * UsageStats 只在应用「切到后台」时才落一条事件，所以正在前台用的那个 App
+     * 的时长短期内不会进库——这是「数字不动」的根本原因。这里把当前前台应用的
+     * 已持续毫秒按墙上时钟插值补上：它被切后台、事件落库后，前台快照就会变成
+     * 别的应用或空，增量自动归零，不会重复计。
+     */
+    private val liveDelta: Flow<Long> = combine(ticker, foregroundPoll) { now, fg ->
+        if (fg == null) 0L else fg.elapsedMs + (now - fg.readAt).coerceAtLeast(0L)
+    }
+
+    /**
+     * 采集循环：首页可见期间每 15 秒重算一次今日用量。
+     * 跟随 uiState 订阅启停（collectAsStateWithLifecycle 首页不可见即停），
+     * 不会在后台空转。系统事件本身有几秒延迟，不重采的话从别的应用回到留白，
+     * 看到的还是几分钟前的数字。
+     */
+    private val collectLoop: Flow<Int> = flow {
+        var n = 0
+        while (true) {
+            runCatching { usageRepo.collectNow() }
+            emit(n++)
+            delay(15_000L)
+        }
+    }.flowOn(Dispatchers.IO) // 采集涉及 UsageStats 查询与数据库写入，离开主线程
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
+    /** 四个数据源的合成（不含实时增量，避免超过 combine 的五流上限） */
+    private val baseState: Flow<HomeUiState> = combine(
         usageRepo.observeDailyUsage(DateKeys.today()),
         focusRepo.observeDaily(1),
         settingsRepo.settings,
@@ -76,9 +130,11 @@ class HomeViewModel : ViewModel() {
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
-    init {
-        // 进入首页触发一次增量采集，保证数据新鲜
-        // 采集涉及 UsageStats 查询与数据库写入，必须离开主线程，否则回首页会卡
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { usageRepo.collectNow() }
-    }
+    val uiState: StateFlow<HomeUiState> = combine(
+        baseState,
+        collectLoop,
+        liveDelta,
+    ) { base, _, delta ->
+        base.copy(screenTodayMs = base.screenTodayMs + delta)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 }

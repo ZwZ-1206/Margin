@@ -14,8 +14,8 @@ android {
         applicationId = "com.liubai.app"
         minSdk = 28
         targetSdk = 36
-        versionCode = 17
-        versionName = "1.2.14"
+        versionCode = 18
+        versionName = "1.2.15"
         androidResources.localeFilters += listOf("zh", "en")
     }
 
@@ -62,6 +62,10 @@ android {
     }
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
+    }
+    androidResources {
+        // 咖啡馆录音循环走 MediaPlayer 流式播放，openFd 要求 APK 内不压缩存储
+        noCompress += "opus"
     }
 }
 
