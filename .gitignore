@@ -30,7 +30,7 @@ keystore/
 Thumbs.db
 preview.log
 
-# 逆向分析中间产物（82MB，结论已沉淀在 docs/）
+# 本地分析中间产物（约 82MB，结论已沉淀在 docs/）
 apk-analysis/
 
 # 音色仿真中间产物（脚本可重新生成）
