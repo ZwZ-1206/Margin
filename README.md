@@ -30,7 +30,8 @@
     ├── 02-设计与工程提升方向.md
     ├── 03-Android-APK-实现方案.md
     ├── 04-品牌命名与定位.md
-    └── 05-Margin 品牌视觉规范.md
+    ├── 05-Margin 品牌视觉规范.md
+    └── remoteviews-widget-loading-fix.md
 ```
 
 ## 快速开始
